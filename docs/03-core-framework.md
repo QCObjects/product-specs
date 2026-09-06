@@ -239,6 +239,32 @@ routing is recursive down the Nested Components Stack. Sources:
 - New routable components MUST declare explicit `path`s (no catch-all reliance)
   and MUST list valid `routingWay`s they support.
 
+## Template handlers (normative)
+
+Every component renders its template through a handler class — swappable per
+component, which is the framework's other-framework-interop seam. Sources:
+`src/Component.ts` (`parseTemplate`), `src/DefaultTemplateHandler.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/DefaultTemplateHandler.ts`.
+
+- **Default:** `Component.templateHandler = "DefaultTemplateHandler"`.
+  `parseTemplate` resolves the name via `ClassFactory` (fully-qualified custom
+  names work), instantiates `New(HandlerClass, {component, template})`, merges
+  `routingParams` into the data when the component sets `assignRoutingParams`,
+  and returns `instance.assign(data)`.
+- **Contract for custom handlers:** constructor takes `{component, template}`;
+  `assign(data) -> string` returns the rendered markup. If the component has no
+  own `templateHandler` value, the template passes through raw (no binding).
+- **Default semantics** (`DefaultTemplateHandler.assign`): for each
+  string/number datum, run it through `processObject` (meta processors resolve
+  inside values too), `{{key}}` global-replace across the template, then
+  `processObject` over the whole result. Non-object `data` skips binding with a
+  debug line; processor failures throw naming the component.
+- **Interop:** a custom handler MAY parse/emit any syntax — set
+  `templateHandler` to a registered handler class name on exactly the components
+  that need it (e.g. a React-rendered subtree, Mustache/Handlebars templates).
+  Handler choice is per-component, so hybrid apps MUST document which components
+  use non-default handlers and their syntax.
+
 ## Services (normative)
 
 **`Service` props:** `domain`, `basePath` (auto); `url` (absolute or basePath-
