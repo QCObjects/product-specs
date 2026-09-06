@@ -1,0 +1,40 @@
+name: docs
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [development, main]
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx --yes markdown-link-check docs/*.md README.md AGENTS.md
+
+  schemas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: |
+          for f in schemas/examples/*.json; do
+            echo "validating $f"
+            npx --yes ajv-cli validate -s schemas/config.schema.json -d "$f" --strict=false
+          done
+
+  mkdocs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r docs/requirements.txt
+      - run: mkdocs build --strict

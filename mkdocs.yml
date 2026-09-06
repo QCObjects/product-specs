@@ -1,0 +1,49 @@
+site_name: QCObjects Product Specs
+site_description: Source of truth for the QCObjects ecosystem — framework, SDK, CLI, app structure, and v3.0 roadmap.
+site_author: QCObjects
+repo_url: https://github.com/QCObjects/product-specs
+edit_uri: edit/development/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Product Vision: 01-product-vision.md
+  - Architecture: 02-architecture.md
+  - Core Framework: 03-core-framework.md
+  - SDK: 04-sdk.md
+  - CLI: 05-cli.md
+  - App Structure: 06-app-structure.md
+  - App Templates: 07-app-templates.md
+  - CI Conventions: 08-ci-conventions.md
+  - License: 09-license.md
+  - Contribution Pipeline: 10-contribution-pipeline.md
+  - Features: 11-features.md
+  - Schemas: 12-schemas.md
+  - Diagrams: 13-diagrams.md
+  - Build Scripts: 14-build-scripts-blueprint.md
+  - Unified Vision v3.0: 15-unified-vision-v3.md
+
+strict: true
