@@ -5,3 +5,5 @@ public/
 dist/
 build/
 ._*
+
+site/

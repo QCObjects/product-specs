@@ -25,7 +25,7 @@ flowchart TB
     CFG -.-> H
 ```
 
-Source: [`../diagrams/ecosystem.mmd`](../diagrams/ecosystem.mmd)
+Source: [`diagrams/ecosystem.mmd`](https://github.com/QCObjects/product-specs/blob/development/diagrams/ecosystem.mmd)
 
 ## Request lifecycle
 

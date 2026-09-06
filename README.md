@@ -1,11 +1,20 @@
 # QCObjects Product Specs
 
+[![docs](https://github.com/QCObjects/product-specs/actions/workflows/docs.yml/badge.svg)](https://github.com/QCObjects/product-specs/actions/workflows/docs.yml)
+[![pages](https://github.com/QCObjects/product-specs/actions/workflows/pages.yml/badge.svg)](https://github.com/QCObjects/product-specs/actions/workflows/pages.yml)
+[![Documentation Status](https://readthedocs.org/projects/qcobjects-product-specs/badge/?version=latest)](https://qcobjects-product-specs.readthedocs.io/?badge=latest)
+
 **Source of truth** for the QCObjects ecosystem: framework, SDK, CLI, resulting app
 structure, templates, conventions, and the unified v3.0 vision.
 
+**Published docs:** GitHub Pages (from `main`) · Read the Docs (`qcobjects-product-specs`)
+· local preview via `mkdocs serve`.
+
 One document per product foundation. Each spec is normative (RFC 2119 `MUST` /
 `SHOULD` / `MAY`) with an explicit Verification section so future plans can be
-checked against it.
+checked against it. Definitions live inline; code references are pinned to
+release tags (`v2.5.142` core, `v2.5.105` SDK, `v2.5.158` CLI, `v2.4.40-ts`
+template) because code drifts and the spec is the truth.
 
 ## Index
 
