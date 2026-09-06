@@ -1,0 +1,20 @@
+{
+  "documentRoot": "/home/qcobjects/projects/mynewapp/",
+  "relativeImportPath": "js/packages/",
+  "domain": "mynewapp.qcobjects.com",
+  "serverPortHTTP": "8080",
+  "serverPortHTTPS": "8443",
+  "private-cert-pem": "/etc/letsencrypt/live/mynewapp.qcobjects.com/fullchain.pem",
+  "private-key-pem": "/etc/letsencrypt/live/mynewapp.qcobjects.com/privkey.pem",
+  "backend": {
+    "routes": [
+      {
+        "name": "signup",
+        "description": "Account creation microservice",
+        "path": "/createaccount",
+        "microservice": "org.quickcorp.backend.signup",
+        "responseHeaders": {}
+      }
+    ]
+  }
+}
