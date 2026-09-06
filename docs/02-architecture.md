@@ -44,6 +44,27 @@ Cross-cutting rules:
 - Browser, ESM, and CJS distributions MUST all be published
   (`public/browser`, `public/esm`, `public/cjs` + `public/types`).
 
+## Rendering model: CSR-only, no SSR (normative)
+
+QCObjects renders exclusively on the client. There is no server-side rendering
+in the framework, and none is planned on the v2.x line — this absence is a
+documented posture, not a gap.
+
+- Components build in the live browser DOM (`Component.ts` carries 23
+  `isBrowser` guards; every non-browser branch is an explicit
+  `not yet implemented` stub). Templates load over XHR, binding and routing
+  resolve against `location`/`document`/`window`, and shadowed components need
+  a real `shadowRoot`.
+- The server's job is static files + data APIs (`backend.routes`), never HTML
+  rendering. `publish:static` copies files unrendered (it is a deploy copier,
+  not a prerenderer).
+- Consequences: apps MUST ship a crawlable static shell (`index.html` with
+  meta/OG tags, `404.html`, sitemap) and MUST NOT depend on pre-rendered
+  component HTML existing at serve time; crawlers that don't execute JS see
+  the shell only. If SSR/SSG is ever adopted, it REQUIRES a dedicated spec +
+  major-line decision first (candidate vehicle: the v3.2+ Wasm/FastAPI layer,
+  not the Node server).
+
 ## N-Tier doctrine (from the core README)
 
 QCObjects targets professional Multitier/N-Tier environments for scalability
