@@ -2,7 +2,7 @@
 
 [![docs](https://github.com/QCObjects/product-specs/actions/workflows/docs.yml/badge.svg)](https://github.com/QCObjects/product-specs/actions/workflows/docs.yml)
 <!-- TODO provisioning: re-add pages.yml badge after first Pages deploy from main -->
-<!-- TODO provisioning: point RTD badge at https://qcobjects-product-specs.readthedocs.io/ after RTD import -->
+<!-- TODO provisioning: point RTD badge at the project readthedocs URL after RTD import -->
 [![Documentation Status](https://readthedocs.org/projects/qcobjects-product-specs/badge/?version=latest)](https://readthedocs.org/dashboard/)
 
 **Source of truth** for the QCObjects ecosystem: framework, SDK, CLI, resulting app

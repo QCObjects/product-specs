@@ -95,7 +95,8 @@ justify the violation explicitly or be rejected.
 
 ## Community & sustainability ( pointers, not norms)
 
-- Demos: [PWA live demo](https://newapp.qcobjects.dev/), Foundation/Materialize/raw-CSS
+- Demos: [PWA live demo app](https://github.com/QCObjects/qcobjects-new-app) (deployed
+  at newapp.qcobjects.dev), Foundation/Materialize/raw-CSS
   samples, canvas manipulation example (see spec 07).
 - DevBlog (Hashnode), explainer video, Product Hunt, CII Best Practices badge.
 - Sponsorship/donations via the README links; Contributor Covenant
