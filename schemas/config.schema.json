@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QCObjects config.json",
+  "type": "object",
+  "required": ["domain", "documentRoot", "relativeImportPath", "serverPortHTTP", "serverPortHTTPS", "backend"],
+  "properties": {
+    "domain": { "type": "string", "pattern": "^(\\$ENV\\(.+\\)|.+)$" },
+    "certificate_provider": { "type": "string" },
+    "devmode": { "type": ["string", "boolean"] },
+    "autodiscover": { "type": "boolean", "default": false },
+    "autodiscover_commands": { "type": "boolean", "default": false },
+    "autodiscover_handlers": { "type": "boolean", "default": false },
+    "documentRoot": { "type": "string" },
+    "documentRootFileIndex": { "type": "string", "default": "index.html" },
+    "cacheControl": { "type": "string" },
+    "relativeImportPath": { "type": "string" },
+    "componentsBasePath": { "type": "string" },
+    "serverPortHTTP": { "type": ["string", "integer"] },
+    "serverPortHTTPS": { "type": ["string", "integer"] },
+    "useLocalSDK": { "type": "boolean", "default": false },
+    "useLegacyHTTP": { "type": "boolean", "default": false },
+    "enableShellCommands": { "type": "boolean", "default": false },
+    "private-key-pem": { "type": "string" },
+    "private-cert-pem": { "type": "string" },
+    "backend": {
+      "type": "object",
+      "properties": {
+        "db_engine": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "databaseName": { "type": "string" }
+          }
+        },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "defaultUser": { "type": "string" },
+            "defaultPasswd": { "type": "string" }
+          }
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "path", "microservice"],
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "path": { "type": "string" },
+              "microservice": { "type": "string" },
+              "redirect_to": { "type": "string" },
+              "responseHeaders": { "type": "object" },
+              "cors": {
+                "type": "object",
+                "properties": {
+                  "allow_origins": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
