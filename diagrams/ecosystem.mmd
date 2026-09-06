@@ -1,0 +1,10 @@
+flowchart TB
+    CLI[qcobjects-cli<br/>scaffold · serve · build · publish] --> APP[App<br/>PWA shell + packages]
+    APP --> CORE[qcobjects core<br/>Class · MVC · routing · loaders]
+    APP --> SDK[qcobjects-sdk<br/>components · controllers · views]
+    SDK --> CORE
+    CLI --> SRV[Server adapters<br/>node · bun -P2-]
+    SRV --> H[Handlers / microservices<br/>static · php · wasm · fastapi]
+    CFG[config.json<br/>$ENV / $config] -.-> CLI
+    CFG -.-> SRV
+    CFG -.-> H
