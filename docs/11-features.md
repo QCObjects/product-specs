@@ -20,6 +20,7 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Package/Import/Export + routing | ✅ | — | — | — | stable |
 | Storage cache, i18n, Crypt, codecs | ✅ | — | — | — | stable |
 | Array/Collection/math helpers | ✅ | — | — | — | stable |
+| Transpiler-free runtime + TS authoring + first-party types | ✅ | ✅ | ✅ | ✅ | stable |
 | ShadowedComponent + RegisterWidget | — | ✅ | — | demo | stable |
 | Form/DataGrid/Modal/Swagger controllers | — | ✅ | — | demo | stable |
 | Grid/List/Slider/Splash/Notifications | — | ✅ | — | demo | stable |
