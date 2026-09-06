@@ -67,11 +67,12 @@ Build/test detail: [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)
 - `GLOBAL.set/get` reaches the global scope store.
 - `waitUntil(effect, condition)` runs once when true (use sparingly).
 
-## Class & object inheritance (normative)
+## Object inheritance (normative)
 
+Concept 1 of 3 (see also: Component inheritance; Nested components routing).
 Applies to every QCObjects object — components, controllers, services, views,
-models (`Contact extends VO`), effects, and plain classes alike. Sources:
-`src/Class.ts`, `src/InheritClass.ts`, `src/super.ts`, `src/is_a.ts`,
+models, effects, and plain classes alike. Sources: `src/Class.ts`,
+`src/InheritClass.ts`, `src/super.ts`, `src/is_a.ts`,
 pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/Class.ts`.
 
 - **Two equivalent modes.** Factory: `Class('Child', Parent, definition)` builds
@@ -98,13 +99,33 @@ pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/Class.ts`.
   SHOULD extend `InheritClass` (directly or transitively) so `__instanceID`,
   `__classType`, and `hierarchy()` exist; overrides MUST call the parent
   implementation unless intentionally replacing it.
-- **Non-component chains:** inheritance is how the SDK is built —
-  `FormField extends Component`, `ButtonField/InputField/TextField/EmailField
-  extends FormField`, `DataGridController/GridController/FormController/
-  SliderController extends Controller`, `JSONService extends Service`,
-  `ModalFade extends Fade`, `Contact extends VO`, `SessionData extends
-  InheritClass`. Subclassing a framework class to specialize it (rather than
-  configuring the base) is the canonical extension pattern.
+
+## Component inheritance (normative)
+
+Concept 2 of 3: how inheritance specializes *components* specifically — the
+template/class/pairing rules that don't apply to plain objects.
+
+- **Canonical pattern:** subclass a framework component to specialize it —
+  `FormField extends Component`; `ButtonField/InputField/TextField/EmailField
+  extends FormField` (each fixing a default body element); `GridComponent`,
+  `SliderComponent`, splash variants. Prefer subclassing over configuring the
+  base with flags.
+- **`name` rule:** a subclass inherits the parent's `name` unless it overrides
+  it — and `name` drives `templateURI`. A subclass that renders different markup
+  MUST set its own `name` (else it silently reuses the parent's template); a
+  subclass that only changes behavior SHOULD keep the parent's `name` to reuse
+  its template. Unnamed components log a build warning.
+- **Pairing inheritance:** `controllerClass`/`viewClass`/`effectClass` pairings
+  and `cached`/`tplsource`/`tplextension` settings inherit with the subclass —
+  override only what changes (e.g. `SlideItemComponent` fixes
+  `effectClass="Fade"`; `GridItemComponent` fixes an inline template).
+- **`subcomponentClass` specialization:** controllers that spawn children
+  (`DataGridController`, `SlideListComponent` defaulting to `GridItemComponent`)
+  resolve the child class per instance — subclass the parent and fix a narrower
+  `subcomponentClass` to specialize a list/grid without touching its logic.
+- **Shadowed inheritance:** `shadowed` inherits; a shadowed subclass of a
+  non-shadowed parent (or vice versa) MUST be a conscious choice — mixed trees
+  route templates into different roots (`shadowRoot` vs body).
 
 **Canonical class example:**
 
@@ -251,6 +272,7 @@ a `<component>` tag. Source: `src/WidgetsFactory.ts`, pinned at
 
 ## Nested components routing (normative)
 
+Concept 3 of 3 (see also: Object inheritance; Component inheritance).
 Every component owns its routing table, and subcomponents own theirs —
 routing is recursive down the Nested Components Stack. Sources:
 `src/Component.ts` (`_generateRoutingPaths`), `src/routings.ts`, pinned at
