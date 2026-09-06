@@ -1,0 +1,58 @@
+# 16 — Add-ons (handlers, libs, commands, admin)
+
+## Purpose
+
+Catalogue the official add-on packages: what each does, which autoload keyword
+it carries, and its lifecycle status — so apps discover backend capability
+without forking the framework.
+
+Sources: `package.json` keywords/versions read live from each repo
+(2026-09-06); README purpose lines. Definitions below are authoritative;
+per-release detail lives in each repo.
+
+## Scope
+
+Official `QCObjects/*` add-ons only. Community packages follow the same
+keyword contract ([05-cli](./05-cli.md) § autoload) but are listed elsewhere.
+
+## How add-ons load (normative)
+
+- Every add-on is an independent npm package carrying its role in `package.json`
+  `keywords`: `qcobjects-handler` (backend route handlers), `qcobjects-lib`
+  (libraries), `qcobjects-command` (CLI commands), `qcobjects-admin-lib`
+  (admin storage backends). The CLI autoloader picks them up per
+  [05-cli](./05-cli.md) — no core changes needed to adopt one.
+- Add-ons MUST follow the unified pipeline (single `development`, tag releases
+  per [08-ci-conventions](./08-ci-conventions.md)) and MUST NOT pin conflicting
+  `qcobjects` majors.
+
+## Catalogue (normative)
+
+| Add-on | Role / keywords | Purpose | Status |
+|---|---|---|---|
+| [qcobjects-handler-hello-world](https://github.com/QCObjects/qcobjects-handler-hello-world) | handler (`qcobjects-handler`) | Minimal starter handler template (`v1.0.0`) — copy it to author a new handler | stable reference |
+| [qcobjects-handler-webpayplus](https://github.com/QCObjects/qcobjects-handler-webpayplus) | handler | Transbank WebPay Plus flow (`/checkout/webpay/init`, `/checkout/webpay/result`) | stable |
+| [qcobjects-handler-openapi](https://github.com/QCObjects/qcobjects-handler-openapi) | handler | Generic Open API request handler | stable |
+| [qcobjects-handler-contactform](https://github.com/QCObjects/qcobjects-handler-contactform) | handler | Contact-form endpoint (`/rest/contactform`) → email + Mailchimp subscriber notification | stable |
+| [qcobjects-handler-mockup](https://github.com/QCObjects/qcobjects-handler-mockup) | handler | Mock backend services for development/test | stable |
+| [qcobjects-admin](https://github.com/QCObjects/qcobjects-admin) | handler (`qcobjects-handler`, `v1.0.1`) | Admin panel for QCObjects apps. MUST be uninstalled before production deploys | stable, dev-only |
+| [qcobjects-admin-lib-db-sqlite3](https://github.com/QCObjects/qcobjects-admin-lib-db-sqlite3) | admin storage (`qcobjects-admin-lib`) | SQLite3 backend for `qcobjects-admin` | stable |
+| [qcobjects-lib-cosmosdb](https://github.com/QCObjects/qcobjects-lib-cosmosdb) | data lib | Microsoft CosmosDB adapter; configures via `$ENV(...)` (the pattern that proved cloud-native readiness for the v3 roadmap) | stable |
+| [qcobjects-lib-sendemail](https://github.com/QCObjects/qcobjects-lib-sendemail) | data lib | Email sending via NodeMailer + Gmail (building block behind contact-form notifications) | stable |
+| [qcobjects-lib-mailchimp-api](https://github.com/QCObjects/qcobjects-lib-mailchimp-api) | data lib | Mailchimp list subscription via the official API (building block behind contact-form notifications) | stable |
+| [qcobjects-command-publish-static](https://github.com/QCObjects/qcobjects-command-publish-static) | command (`qcobjects-command`, `v1.0.4`) | **SUPERSEDED**: standalone `publish:static` command — now built-in to current `qcobjects-cli` (`src/cli-commands-publish-static.ts`). Do NOT install on new projects; kept for legacy CLI lines only | superseded |
+
+## Rules (normative)
+
+- New official add-ons MUST enter this table (role, keywords, purpose, status)
+  in the same PR that publishes them.
+- `superseded` add-ons stay listed one major CLI line with their replacement
+  named, then move to an archived section.
+- The admin panel MUST NEVER ship to production (`npm uninstall` before release
+  builds; CI SHOULD fail the build if it is present in `dependencies`).
+
+## Verification
+
+- Each `stable` row installs cleanly alongside the pinned core/SDK/CLI and its
+  keyword autoloads under default flags.
+- No shipped official add-on is missing from the table.

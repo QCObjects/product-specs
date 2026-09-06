@@ -37,6 +37,7 @@ template) because code drifts and the spec is the truth.
 | 13 | [Diagrams](docs/13-diagrams.md) | System maps (Mermaid sources in `diagrams/`) |
 | 14 | [Build Scripts Blueprint](docs/14-build-scripts-blueprint.md) | esbuild/parcel/tsc pipelines per repo |
 | 15 | [Unified Vision v3.0](docs/15-unified-vision-v3.md) | Sovereign Polyglot Ecosystem + transitional phases |
+| 16 | [Add-ons](docs/16-addons.md) | Official handlers, libs, commands, admin packages |
 
 > Specs 01–14 describe the **current** framework. Spec 15 describes **where it is going**
 > and how to plan the transition. When they conflict, 15 governs the direction and

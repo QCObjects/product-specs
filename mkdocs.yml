@@ -45,5 +45,6 @@ nav:
   - Diagrams: 13-diagrams.md
   - Build Scripts: 14-build-scripts-blueprint.md
   - Unified Vision v3.0: 15-unified-vision-v3.md
+  - Add-ons: 16-addons.md
 
 strict: true
