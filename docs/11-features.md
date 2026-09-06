@@ -18,6 +18,7 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 |---|---|---|---|---|---|
 | Class system + MVC primitives | ✅ | — | — | — | stable |
 | Package/Import/Export + routing | ✅ | — | — | — | stable |
+| Template meta processors (`$mapper/$layout/$component/$repeat`) | ✅ | — | — | ✅ | stable |
 | Storage cache, i18n, Crypt, codecs | ✅ | — | — | — | stable |
 | Array/Collection/math helpers | ✅ | — | — | — | stable |
 | ShadowedComponent + RegisterWidget | — | ✅ | — | demo | stable |
