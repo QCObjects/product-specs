@@ -26,6 +26,24 @@ Build/test detail: [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)
   `testsClassFactorySpec`, `testsGlobalFeaturesSpec`, `testsTypeSpec`);
   `npm test` MUST run lint + full suite green.
 
+## TypeScript posture (normative)
+
+- **Runtime requires no transpiler:** apps MAY be pure `.js` — the browser bundle
+  runs as-is; `Class()`/`Package()`/`Import()` work in plain JavaScript with zero
+  build step (see [06-app-structure](./06-app-structure.md) boot sequence).
+- **Transpilers allowed:** apps MAY be authored in TypeScript — templates ship
+  `src/js/*.ts` + `*.d.ts` alongside compiled output and a binding `build:ts`
+  script; `tsc` declaration builds are part of every repo's pipeline
+  (see [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)).
+- **Framework authored in TypeScript:** core `src/` is 78 `.ts` files / 0 `.js`
+  (SDK: 26 `.ts` / 0 `.js`) at `v2.5.142`/`v2.5.105`; every repo carries
+  `tsconfig.json` + `tsconfig.d.json` + `tsconfig.jasmine.json` and ships
+  first-party declarations under `public/types/` (the `types` + `exports`
+  contract above). Type coverage MUST NOT regress: new public API without
+  declarations fails the release.
+- **Deno:** the CLI is Deno-compatible (`deno.json` + `mod.ts`, strict
+  compiler options) — types flow to Deno consumers via the same declarations.
+
 ## Class system (normative)
 
 - `Class(name, definition)` / `Class(name, Parent, definition)` declares;
@@ -59,6 +77,32 @@ Class('MyClassName',InheritClass,{
 });
 var o = New(MyClassName,{ propertyName1:1, propertyName2:"some value" });
 ```
+
+## Native `class` / `new` interop (normative)
+
+Recent framework versions accept native ES class syntax everywhere the
+factory syntax works — detection via `__is_raw_class__` (public API:
+a function whose source starts with `class`), pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/is_raw_class.ts`.
+
+- **Declare natively:** `class Main extends InheritClass {}` is a first-class
+  class definition; `New(Main, {})` instantiates it (covered by `testsSpec`:
+  `__instanceID` is a number, `__classType` is `"Main"`).
+- **Package natively:** `Package('org.pkg',[class Card extends Component {...}])`
+  registers each class with namespace stamping; a single class may also be
+  passed directly — `Package('org.pkg', MyClass)` sets
+  `__definition.__namespace` + `__namespace` and registers it.
+- **Resolve natively:** `ClassFactory('org.pkg.Name')` returns the native class
+  from the package (last registered wins the bare reference, same rule as above).
+- **Instantiate natively:** `New()` is defined as `new __class__(args)`, so the
+  native `new` operator works too — `new FormController(o)`, `new Move()`,
+  `new i18n_messages_es()` (all used across the SDK sources, which are themselves
+  written in native class syntax).
+- **Introspection:** `__getType__` names raw classes via `constructor.name`;
+  `LegacyCopy` copies them branch-aware. Native and factory classes MAY be mixed
+  freely in one package.
+- New code SHOULD prefer native `class`/`extends` syntax; the `Class()` factory
+  remains supported for cross-browser legacy paths and dynamic definitions.
 
 ## CONFIG & processors (normative)
 
@@ -143,6 +187,58 @@ templates SHOULD prefer `$component`/`$mapper` over hand-concatenated tags.
 **MVC:** `Controller` (base; `done()` fires per component load — the hook for
 dynamic components), `View`, `VO` (value object), `DDO` (dynamic data object).
 
+## Smart widgets (normative)
+
+Smart widgets let a component be declared as a native custom element instead of
+a `<component>` tag. Source: `src/WidgetsFactory.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/WidgetsFactory.ts`.
+
+- `RegisterWidget(name)` / `RegisterWidgets(...names)` define real custom
+  elements via `customElements.define(name, class extends _ComponentWidget_)`.
+  Widget names MUST contain a hyphen (custom-elements requirement).
+- Register widgets in app code (`customWidgets.ts`), e.g.
+  `RegisterWidget("signup-form")`, then declare
+  `<signup-form componentClass="..." controllerClass="...">` directly in HTML.
+- On upgrade, the widget's light-DOM children are cloned into the component
+  body and `data-*` attributes are forwarded onto the body as `data-*` —
+  so slots (`<h1 slot="title">`) and bindings flow through untouched.
+- All tag attributes (`name`, `cached`, `controllerClass`, `componentClass`,
+  `effectClass`, `template-source`, `tplextension`, `data-*`) work identically
+  on widget tags and `<component>` tags.
+- Browser-only: `RegisterWidget` throws
+  `"RegisterWidget is not implemented for non browser ecosystems yet."` outside browsers.
+- New components SHOULD ship a widget name (hyphenated component name) alongside
+  the `<component>` form; templates SHOULD demonstrate the widget form.
+
+## Nested components routing (normative)
+
+Every component owns its routing table, and subcomponents own theirs —
+routing is recursive down the Nested Components Stack. Sources:
+`src/Component.ts` (`_generateRoutingPaths`), `src/routings.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/routings.ts`.
+
+- **Declaration:** routings are child elements of the component body carrying a
+  `routing` attribute marker; each routing node's attributes become the routing
+  object (notably `path`, plus any custom attributes). Paths accumulate into
+  `component.routingPaths` and the global `routingPaths` registry.
+- **Matching:** `path` is a regex where `{param}` segments become named capture
+  groups; `__valid_routings__(routings, routingPath)` filters matches and
+  reverses — later declarations win. `__routing_params__(routing, routingPath)`
+  extracts the params object.
+- **Selection:** `routingSelected` is read-only (setting it only logs); force a
+  rebuild with `route()`. The current path resolves per `routingWay`
+  (`hash` | `pathname` | `search`, from CONFIG, validated against
+  `validRoutingWays`); location changes re-trigger matching.
+- **Nesting:** setting `body` triggers the routings builder for that component;
+  `__buildSubComponents__` then builds each subcomponent, which builds its own
+  routings in turn — so a route selects a chain of component + subcomponents,
+  each rendering its matched template. Shadowed components route into their
+  `shadowRoot` (`<slot>` content follows the same rules).
+- Components that never declare `routing` children match nothing and render
+  their default template unconditionally.
+- New routable components MUST declare explicit `path`s (no catch-all reliance)
+  and MUST list valid `routingWay`s they support.
+
 ## Services (normative)
 
 **`Service` props:** `domain`, `basePath` (auto); `url` (absolute or basePath-
@@ -166,6 +262,42 @@ Class('MyTestService',Service,{
 the endpoint dislikes it. **`ConfigService`** loads `config.json`.
 **`SourceJS`/`SourceCSS`** inject non-package dependencies from controllers
 (`controller.dependencies.push(New(SourceJS,{external, url, done}))`).
+
+## Component authoring rules (normative)
+
+Harvested from the field-verified scaffolding recipe (2.4 line; key APIs
+re-confirmed in `v2.5.142` source: `hostElements`/`subtags`, shadow-root
+handling, tag filter `quick-component:not([loaded]),component:not([loaded])`
+in `src/tag_filter.ts`).
+
+- **Widget vs generic:** a smart widget (`<greeting-component>`) is a shell —
+  its constructor creates a child generic node (`<quick-component name="…">`)
+  and copies attributes onto it; the generic node is the real renderer.
+  Prefer plain `<quick-component name>` with an explicit `componentClass`
+  string over widget tags nested under shadowed layouts (the widget transform
+  can drop `componentClass` there, misnaming the component and 404ing its template).
+- **Class resolution:** the class comes from the element's `componentClass`
+  attribute (default: base `Component`); `name` drives only `templateURI` and
+  registration. Inline `template`/`data` patterns REQUIRE the real class via
+  `componentClass` or those fields are ignored. One namespace per component
+  (`Package("com.x.card",[Card])`, referenced as `…card.Card`).
+- **`data-*` merging:** the base constructor merges element `data-*` attributes
+  into `data` — do NOT also declare a `data` field on a class that wants those
+  values (the field initializes after `super()` and clobbers them).
+- **Interaction:** implement widget behavior in `done()` (fires after build with
+  a live `shadowRoot`); query via `this.hostElements(selector)` (shadow-aware:
+  `shadowRoot` when shadowed, else `body`; `subtags` is the same getter).
+  Page-level delegated listeners see retargeted `event.target` (the host) —
+  use `event.composedPath()[0]` + `getRootNode()` there instead.
+- **Shadow CSS:** page CSS cannot reach shadow roots — each template carries
+  `<style>@import url("css/components/….css")</style>` and the imported file
+  chains further imports (e.g. compiled Tailwind); the browser resolves the
+  chain inside the shadow root.
+- **Blank component triage:** 404 on the `.tpl.html` XHR (template must exist
+  under the served root) is the #1 cause; enable `logger.debugEnabled` and look
+  for `template source … is default|inline`, `type for … is Component`
+  (base-class fallback), `LOADING COMPONENT DATA`, and `Something wrong loading
+  the component`.
 
 ## Effects, Timer, codecs (normative)
 
