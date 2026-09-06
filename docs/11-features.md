@@ -19,6 +19,8 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Class system + MVC primitives | ✅ | — | — | — | stable |
 | Native `class`/`extends` + `new` interop | ✅ | ✅ | — | ✅ | stable |
 | Package/Import/Export + routing | ✅ | — | — | — | stable |
+| Smart widgets (custom elements) | ✅ | ✅ | — | ✅ | stable |
+| Nested component routing (`{param}`) | ✅ | — | — | ✅ | stable |
 | Storage cache, i18n, Crypt, codecs | ✅ | — | — | — | stable |
 | Array/Collection/math helpers | ✅ | — | — | — | stable |
 | ShadowedComponent + RegisterWidget | — | ✅ | — | demo | stable |

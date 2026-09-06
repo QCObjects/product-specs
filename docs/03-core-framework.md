@@ -140,6 +140,58 @@ Processor.setProcessor(SERVICE_HOST); // enables "$SERVICE_HOST(SERVICE_URL)"
 **MVC:** `Controller` (base; `done()` fires per component load — the hook for
 dynamic components), `View`, `VO` (value object), `DDO` (dynamic data object).
 
+## Smart widgets (normative)
+
+Smart widgets let a component be declared as a native custom element instead of
+a `<component>` tag. Source: `src/WidgetsFactory.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/WidgetsFactory.ts`.
+
+- `RegisterWidget(name)` / `RegisterWidgets(...names)` define real custom
+  elements via `customElements.define(name, class extends _ComponentWidget_)`.
+  Widget names MUST contain a hyphen (custom-elements requirement).
+- Register widgets in app code (`customWidgets.ts`), e.g.
+  `RegisterWidget("signup-form")`, then declare
+  `<signup-form componentClass="..." controllerClass="...">` directly in HTML.
+- On upgrade, the widget's light-DOM children are cloned into the component
+  body and `data-*` attributes are forwarded onto the body as `data-*` —
+  so slots (`<h1 slot="title">`) and bindings flow through untouched.
+- All tag attributes (`name`, `cached`, `controllerClass`, `componentClass`,
+  `effectClass`, `template-source`, `tplextension`, `data-*`) work identically
+  on widget tags and `<component>` tags.
+- Browser-only: `RegisterWidget` throws
+  `"RegisterWidget is not implemented for non browser ecosystems yet."` outside browsers.
+- New components SHOULD ship a widget name (hyphenated component name) alongside
+  the `<component>` form; templates SHOULD demonstrate the widget form.
+
+## Nested components routing (normative)
+
+Every component owns its routing table, and subcomponents own theirs —
+routing is recursive down the Nested Components Stack. Sources:
+`src/Component.ts` (`_generateRoutingPaths`), `src/routings.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/routings.ts`.
+
+- **Declaration:** routings are child elements of the component body carrying a
+  `routing` attribute marker; each routing node's attributes become the routing
+  object (notably `path`, plus any custom attributes). Paths accumulate into
+  `component.routingPaths` and the global `routingPaths` registry.
+- **Matching:** `path` is a regex where `{param}` segments become named capture
+  groups; `__valid_routings__(routings, routingPath)` filters matches and
+  reverses — later declarations win. `__routing_params__(routing, routingPath)`
+  extracts the params object.
+- **Selection:** `routingSelected` is read-only (setting it only logs); force a
+  rebuild with `route()`. The current path resolves per `routingWay`
+  (`hash` | `pathname` | `search`, from CONFIG, validated against
+  `validRoutingWays`); location changes re-trigger matching.
+- **Nesting:** setting `body` triggers the routings builder for that component;
+  `__buildSubComponents__` then builds each subcomponent, which builds its own
+  routings in turn — so a route selects a chain of component + subcomponents,
+  each rendering its matched template. Shadowed components route into their
+  `shadowRoot` (`<slot>` content follows the same rules).
+- Components that never declare `routing` children match nothing and render
+  their default template unconditionally.
+- New routable components MUST declare explicit `path`s (no catch-all reliance)
+  and MUST list valid `routingWay`s they support.
+
 ## Services (normative)
 
 **`Service` props:** `domain`, `basePath` (auto); `url` (absolute or basePath-
