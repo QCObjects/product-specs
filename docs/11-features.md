@@ -17,9 +17,14 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Feature | Core | SDK | CLI | Templates | Status |
 |---|---|---|---|---|---|
 | Class system + MVC primitives | ✅ | — | — | — | stable |
+| Native `class`/`extends` + `new` interop | ✅ | ✅ | — | ✅ | stable |
 | Package/Import/Export + routing | ✅ | — | — | — | stable |
+| Template meta processors (`$mapper/$layout/$component/$repeat`) | ✅ | — | — | ✅ | stable |
+| Smart widgets (custom elements) | ✅ | ✅ | — | ✅ | stable |
+| Nested component routing (`{param}`) | ✅ | — | — | ✅ | stable |
 | Storage cache, i18n, Crypt, codecs | ✅ | — | — | — | stable |
 | Array/Collection/math helpers | ✅ | — | — | — | stable |
+| Transpiler-free runtime + TS authoring + first-party types | ✅ | ✅ | ✅ | ✅ | stable |
 | ShadowedComponent + RegisterWidget | — | ✅ | — | demo | stable |
 | Form/DataGrid/Modal/Swagger controllers | — | ✅ | — | demo | stable |
 | Grid/List/Slider/Splash/Notifications | — | ✅ | — | demo | stable |
@@ -32,8 +37,10 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Synced semver (`v-*`) + changelog | — | — | ✅ | ✅ | stable |
 | PWA shell (manifest, SW, offline, lazy-src) | — | — | template | ✅ | stable |
 | `$ENV()`/`$config()` + custom processors | ✅ | ✅ | ✅ | ✅ | stable |
+| Keyword autoload (libs/handlers/commands) | — | — | ✅ | ✅ | stable |
 | Encrypted `config.json` | ✅ | — | ✅ | ✅ | stable |
 | Backend routes + `BackendMicroservice` | ✅ | — | ✅ | ✅ | stable |
+| SSR via FileDispatcher (`useTemplate`) | — | — | ✅ | ✅ | stable |
 | PHP handler bridge | — | — | ✅ | — | beta |
 | Deno support (`mod.ts`) | ✅ core | — | ✅ | — | beta |
 | MIT license line | — | — | — | — | planned (P1) |

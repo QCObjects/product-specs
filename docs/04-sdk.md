@@ -50,6 +50,19 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
 - **GridComponent** (reserved name `"grid"`) + **GridController** → CSS grid;
   `rows`/`cols` attrs; subcomponents recommended as cells; provide
   `grid.tpl.html` (`<p>Loading grid...</p>`).
+- **GridItemComponent** (name `"grid-item"`, shadowed, inline template
+  `<img src="{{image}}"/><p>{{description}}</p>`) — the default cell used when
+  a grid-like controller needs a `subcomponentClass` and none is given.
+- **ListComponent + ListItemComponent + ListController** — vertical-list analogue
+  of the grid trio: `ListController` drives `ListItemComponent` instances inside
+  `ListComponent` from `data[]`.
+- **SliderComponent** (name `"slider"`, shadowed) + **SlideListComponent**
+  (name `"slidelist"`, inline `<p>Loading...</p>`; forces
+  `controllerClass="DataGridController"` and defaults
+  `subcomponentClass="GridItemComponent"`) + **SlideItemComponent**
+  (name `"slider_item"`, `Fade` effect; inline `qcoSlides` template binding
+  `{{slideNumber}} {{__dataLength}} {{image}} {{title}} {{label}} {{link}}
+  {{category}}`, with `slideNumber = __dataIndex + 1`).
 - **ModalEnclosureComponent / ModalComponent** — modal shells (pair with
   ModalController).
 - **SwaggerUIComponent** (+ SwaggerUIController) — injects Swagger-UI DOM.
@@ -57,15 +70,28 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
   `data-background`, `data-video_mp4|_webm|_ogg`, `duration="5000"`,
   `<img slot="logo">`; main component follows with `splashscreen` attr
   (`<layout-basic splashscreen name="main" cached=true ...>` in widget syntax).
+- **SplashScreenComponent** — base splash (extended by video + cube variants).
+- **CubeSplashScreenComponent** — 3D spinning-cube splash (shadowed, inline
+  template with `spin` keyframes).
+- **NotificationComponent** — notification shell. Drift note: registered under
+  the legacy `org.quickcorp.components.notifications` package — the only SDK
+  module still on the old namespace; rename to `org.qcobjects.*` when touched.
 - Visual assets live under `src/css` + `src/templates`; class logic MUST NOT
   inline large CSS blobs.
 
 ## Controllers catalogue
 
+- **GenericController** — empty `Controller` extension point; extend it (instead
+  of raw `Controller`) when a controller needs no built-in behavior yet.
 - **GridController** — with GridComponent (see above).
 - **DataGridController** — maps `data[]` onto `subcomponentClass` instances
   (e.g. profile cards: `CardComponent` template `card.tpl.html` with
   `{{profilePicture}} {{name}} {{email}}`; list shell `loading_list.tpl.html`).
+- **ListController** — with ListComponent/ListItemComponent (see above).
+- **SliderController** — autoplay for SliderComponent: `duration` default 7100ms,
+  `slideIndex`, `interval`; API `plusSlides(n)`, `plusSlidesAndStop(n)`,
+  `currentSlide(n)`, `stop()`; shadow-aware (`shadowRoot` when shadowed, else
+  `body`); registers itself globally as `slider_<instanceID>`.
 - **ModalController** — modal behavior.
 - **FormValidations** — `FormValidations.getDefault(name)` default validators.
 - **FormController** — 3-step forms: (1) `serviceClass` string (resolved via
@@ -90,9 +116,45 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
 `WipeLeft/Right/Up/Down.apply(el,sFrom,sTo)`.
 Batch via `Tag(...).map(el => (new X()).apply(el, …))`.
 
-## Tools, views, i18n
+Modal presets (`org.qcobjects.modal.effects`, internal — imported by the
+components module, no separate package export): `ModalFade extends Fade`
+(500ms), `ModalMoveUp extends Move` (800ms), `ModalMoveDown extends Move` (300ms).
 
+## Models, cloud session, tools, views, i18n
+
+- `org.qcobjects.models.Contact extends VO` — canonical value-object example;
+  extend `VO` (not plain objects) for model data.
+
+## Session handling (normative)
+
+Sources: `src/ts/org.qcobjects.cloud.auth.session.{usertoken,data}.ts`, pinned at
+`https://github.com/QCObjects/qcobjects-sdk/blob/v2.5.105/src/ts/org.qcobjects.cloud.auth.session.usertoken.ts`.
+Status: `beta` (see [11-features](./11-features.md)) — API shape may still move.
+
+- **Token issuance** (`SessionUserToken extends InheritClass`): one singleton per
+  username in `global` under `userToken_<base64(username)>` (`getGlobalUser(...)`
+  creates-or-returns). The token is `_Crypt.encrypt("userAgent|username|timestamp",
+  origin-or-domain)` held in a `ComplexStorageCache` keyed by instance ID
+  (first access encrypts via `load`, later accesses hit `alternate`/cache).
+  Accessors: `getGlobalUser{,Token,Id,Priority}(username)`.
+- **Login credentials:** `getLoginCredentialsToken(username, password)` =
+  `_Crypt.encrypt(username+password, userToken)` — the password never travels or
+  persists raw; only the derived credential token leaves the client.
+- **Logout:** `closeGlobalSession(username)` clears the token cache, nulls the
+  global slot, and resets `SessionUserToken.user` to `{}`.
+- **Session data** (`SessionData extends InheritClass`): `sessionStorage`-backed,
+  keyed `session_<btoa(userToken)>` so each login's data is namespaced by its
+  token (`index(...)` throws unless the usertoken package is imported first).
+  A session container MUST be set first
+  (`setSessionContainer(...parts)`; `getSessionContainer()` throws when unset);
+  `save(...)` stringifies `sessionData` into the slot, `getSessionData(...)`
+  parses it back (`{}` when absent).
+- **Rules:** session reads/writes MUST go through these classes (never raw
+  `sessionStorage` keys); tokens MUST NOT be logged; credential tokens MUST be
+  re-derived per login, never stored; closing a session MUST clear both the
+  token cache and the `sessionStorage` slot.
 - `org.qcobjects.tools.canvas.CanvasTool`, `org.qcobjects.tools.layouts.BasicLayout`.
+- `org.qcobjects.tools.Process extends Timer` — named thread entry.
 - `org.qcobjects.views.GridView` (generic grid view).
 - `org.qcobjects.i18n_messages.i18n_messages` — subclass per lang
   (`class i18n_messages_es extends i18n_messages` with `messages:[{en,es}…]`),

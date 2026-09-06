@@ -7,7 +7,8 @@ Mermaid blocks below (GitHub renders them natively).
 
 ## Scope
 
-Ecosystem map, request lifecycle, and release flow. Per-component internals
+Ecosystem map, request lifecycle, release flow, component tree, nested routing,
+and component layout. Per-component internals
 belong in code comments, not here.
 
 ## Ecosystem map
@@ -65,6 +66,46 @@ flowchart TB
     SVC --> MS[Microservice<br/>org.quickcorp.backend.signup]
 ```
 
+## Nested components routing
+
+```mermaid
+flowchart TB
+    LOC[location<br/>hash / pathname / search] --> WAY{routingWay<br/>from CONFIG}
+    WAY --> R1[Component main<br/>own routings table]
+    R1 -->|match path regex<br/>{param} groups| SEL1[routingSelected<br/>read-only]
+    SEL1 --> T1[template main.tpl.html<br/>render]
+    SEL1 --> SUB[__buildSubComponents__<br/>nested scan]
+    SUB --> R2[Subcomponent grid<br/>own routings table]
+    R2 -->|match| SEL2[routingSelected]
+    SEL2 --> T2[template grid.tpl.html<br/>render]
+    SEL2 --> R3[Sub-subcomponent card<br/>own routings table]
+    R3 -->|match| T3[template card.tpl.html<br/>render]
+    R3 -->|no routing children| DFLT[default template<br/>unconditional]
+```
+
+Source: [`diagrams/nested-routing.mmd`](https://github.com/QCObjects/product-specs/blob/development/diagrams/nested-routing.mmd)
+
+## Component layout (anatomy)
+
+```mermaid
+flowchart TB
+    TAG["&lt;component&gt; tag / widget<br/>name · cached · data-* · *Class attrs"] --> INST[Component instance<br/>body · data · method]
+    INST --> CLS[class hierarchy<br/>Component subclass]
+    INST --> TPL[template<br/>inline / URI / none]
+    INST --> HDL[templateHandler<br/>Default or custom]
+    TPL --> HDL
+    HDL --> BIND["{{data}} binding<br/>$…() processors"]
+    BIND --> BODY[body DOM / shadowRoot]
+    INST --> CTL[controller<br/>done() per load]
+    INST --> VIEW[view]
+    INST --> EFF[effectClass]
+    INST --> SVC[services<br/>JSONService · serviceLoader]
+    INST --> SUB[subcomponents<br/>nested stack]
+    INST --> RTE[routings table<br/>path regex · {param}]
+```
+
+Source: [`diagrams/component-layout.mmd`](https://github.com/QCObjects/product-specs/blob/development/diagrams/component-layout.mmd)
+
 ## Normative
 
 - Diagrams MUST match the specs: any layer/contract change MUST update the
@@ -74,3 +115,5 @@ flowchart TB
 ## Verification
 
 - `npx --yes @mermaid-js/mermaid-cli -i diagrams/ecosystem.mmd` renders without errors.
+- Same check MUST pass for `diagrams/nested-routing.mmd` and
+  `diagrams/component-layout.mmd` when the set changes.

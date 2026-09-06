@@ -44,6 +44,34 @@ Cross-cutting rules:
 - Browser, ESM, and CJS distributions MUST all be published
   (`public/browser`, `public/esm`, `public/cjs` + `public/types`).
 
+## Rendering model: CSR + opt-in SSR (normative)
+
+QCObjects renders on the client by default AND supports server-side rendering
+through the CLI server — same component pipeline both sides. Sources:
+`qcobjects-cli` `src/main-file.ts` (`FileDispatcher`), `src/defaultsettings.ts`.
+
+- **CSR (default):** components build in the live browser DOM (template XHR,
+  `{{}}` binding, routing against `location`, shadow roots). `Component.ts`
+  carries `isBrowser` guards for DOM-only behaviors (effects, fullscreen,
+  shadow attachment).
+- **SSR (opt-in):** `FileDispatcher` serves `.html`/`.tpl.html` files by
+  instantiating a real `Component` server-side in Node —
+  `New(Component, {name:"static_source", template: source, tplsource:"inline",
+  data:{…}, done({component}){ body = component.parsedAssignmentText }})` —
+  and sending `parsedAssignmentText` as the response body. Template binding,
+  `$…()` processors, and the template handler all run server-side exactly as
+  in the browser; no browser DOM is needed for this inline path.
+- **Gate:** SSR applies only when `CONFIG.get("useTemplate")` is true AND the
+  extension is `.html`/`.tpl.html` (CLI default: `useTemplate=false`).
+  Otherwise the file streams unrendered with its mime type + `cacheControl`.
+  Apps that want SSR MUST set `useTemplate:true` in `config.json`.
+- **Scope note:** SSR covers template+data rendering (the `parseTemplate` /
+  handler path). Browser-only behaviors (shadow DOM attachment, effects,
+  client routing, XHR-loaded external templates) still execute client-side on
+  hydration. `publish:static` remains a file copier, not a prerenderer.
+- Apps SHOULD still ship a crawlable static shell (meta/OG tags, `404.html`,
+  sitemap) for crawlers that don't execute JS when SSR is off.
+
 ## N-Tier doctrine (from the core README)
 
 QCObjects targets professional Multitier/N-Tier environments for scalability
@@ -93,6 +121,31 @@ Package('cl.quickcorp.backend.signup',[
 ```
 
 (Note: `Date.now().toString()` in source; shape above.)
+
+## `BackendMicroservice` base API (normative)
+
+Source: `src/BackendMicroservice.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/BackendMicroservice.ts`.
+
+- **Construction:** `New(MicroserviceClass, {domain, basePath, body, stream, request})`;
+  the constructor stores all five, defaults `body` to `null`, runs `cors()`,
+  and wires dispatch. `stream`/`request`/`route`/`headers` stay available as
+  instance fields for the whole call.
+- **Verb dispatch:** stream `"data"` events route to `post(data)`; all other
+  request methods dispatch to same-named methods — `get`, `head`, `put`,
+  `delete`, `connect`, `options`, `trace`, `patch`. Override exactly the verbs
+  the route serves; default verb methods log and call `done()`.
+- **Answering:** set `this.body` (object, e.g. a JSON-RPC 2.0 envelope
+  `{jsonrpc:"2.0", result, id}`) then call `this.done()`. Never write the raw
+  stream unless implementing a custom transport.
+- **`cors()` semantics** (driven by `route.cors`):
+  `allow_origins` (`"*"` or list; mismatch empties the body and finishes —
+  fail-closed); `allow_credentials` (default `"true"`);
+  `allow_methods` (default `GET, OPTIONS, POST`); `allow_headers` (default `*`).
+  With no `route.cors` at all, validation is skipped (log only) — routes that
+  need browsers MUST declare `cors`.
+- The `com.qcobjects.backend.microservice.static` built-in serves
+  `redirect_to` file targets — use it for static routes instead of custom code.
 
 ## Backend routing contract (`config.json`)
 

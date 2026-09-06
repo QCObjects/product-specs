@@ -36,6 +36,32 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
 - Template hero/pages components (`templates/components/{hero,pages}`) MUST
   keep `name` ↔ `*.tpl.html` file correspondence (`tplextension: tpl.html`).
 
+## CSS framework interoperability (normative)
+
+The framework is CSS-agnostic: it ships plain CSS (SDK `src/css`, template
+`css/` matrix) and composes with any CSS system at two layers.
+
+- **Light DOM (page shell, non-shadowed components):** any global stylesheet
+  works unchanged — link Foundation, Bootstrap, Tailwind builds, or hand CSS in
+  `index.html` as usual (reference demos exist for Foundation, Materialize, and
+  raw CSS).
+- **Shadow DOM (shadowed components):** page CSS cannot cross the boundary —
+  each shadowed template MUST carry its own `<style>` importing what it needs
+  (`<style>@import url("css/components/….css")</style>`); chained imports
+  (e.g. a component CSS importing a compiled Tailwind build) resolve inside the
+  shadow root (see [03-core-framework](./03-core-framework.md) § Component
+  authoring rules).
+- **Preprocessors (SCSS/Sass, Tailwind, PostCSS):** build-time concerns owned by
+  the app, NOT the framework — no framework package depends on them. Apps MAY
+  compile `scss/ → css/` and Tailwind sources into `src/css` before the standard
+  build (reference: `qcobjects-web-2025` runs `sass` + `tailwindcss` ahead of
+  `build:assets`); compiled output MUST land in the served CSS tree, never
+  source `.scss` files.
+- **Theme matrix:** every template ships `css/theme/{basic,cyan,redlight,xtra}`
+  + `desktop/` + `mobile/` variants and `css/components/` per-component styles;
+  new themes MUST follow the same directory shape. Switching themes MUST be a
+  CSS swap only — no component or template changes.
+
 ## Configuration precedence (normative, from template README + CONFIG.md)
 
 1. Open `config.json` (or `config.yaml`/`config.yml`).

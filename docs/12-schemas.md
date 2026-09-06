@@ -23,15 +23,24 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
 ## General fields (normative catalogue)
 
 - `devmode`: `info` | `debug` | `warn` | `error`.
-- `autodiscover`, `autodiscover_commands`, `autodiscover_handlers`: booleans;
-  absent = secure default `false`.
+- `autodiscover`, `autodiscover_libs`, `autodiscover_commands`,
+  `autodiscover_handlers`: booleans. Absent from `config.json` means the CLI
+  built-in defaults apply — which turn ON `autodiscover`, `autodiscover_commands`,
+  and `autodiscover_handlers` (only `autodiscover_libs` defaults off). To actually
+  disable autoload, the config MUST set the flags `false` explicitly; see the
+  autoload contract in [05-cli](./05-cli.md). Templates SHOULD ship explicit
+  `false` for every flag they don't need.
 - `documentRoot` (e.g. `"$config(projectPath)public/"`), `documentRootFileIndex`
   (default `index.html`), `cacheControl` (e.g. `max-age=31536000`).
 - `relativeImportPath` (e.g. `js/packages/`), `componentsBasePath`.
 - `serverPortHTTP` / `serverPortHTTPS` (e.g. `'8080'` / `'8443'`;
   `process.env.PORT` overrides HTTP).
 - `useLocalSDK` (local vs `sdk.qcobjects.dev`), `useLegacyHTTP`,
-  `enableShellCommands` (absent = `false`).
+  `enableShellCommands` (CLI default `true`; templates SHOULD set `false`
+  unless shell commands are required).
+- `useTemplate` (CLI default `false`): `true` enables server-side rendering of
+  `.html`/`.tpl.html` through `FileDispatcher` (see [02-architecture](./02-architecture.md)
+  § Rendering model).
 - `private-key-pem` / `private-cert-pem` (e.g. `"$config(domain)-privkey.pem"`).
 - `domain`, `certificate_provider`, plus server-side `basePath`, `projectPath`,
   `dataPath` (e.g. `/etc/qcobjects/data/`).
@@ -49,7 +58,9 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
 ## Placeholder resolution (normative)
 
 - `$ENV(VAR)` → environment (Node/CLI/Collab only); missing = boot error naming
-  the variable, never silent empty.
+  the variable, never silent empty. Two-arg form `$ENV(VAR,default)` falls back
+  to `default` (e.g. `"$ENV(DOMAIN,localhost)"`, `"$ENV(DEVMODE,info)"`); empty
+  default (`$ENV(OPENAI_API_KEY,)`) means empty string, NOT an error.
 - `$config(key)` → sibling key or derived value (`$config(domain)`,
   `$config(projectPath)`) — all environments.
 - Custom `$NAME(args)` via `Processor.setProcessor(fn)` (non-arrow; `this` is

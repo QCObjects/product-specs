@@ -27,6 +27,38 @@ npm `scripts` in core, SDK, CLI, and templates.
   `public/browser` (bundle), `public/types` (declarations) — matching the
   `exports` map in [03-core-framework](./03-core-framework.md).
 
+## Module modalities (normative)
+
+Sources: `build-esbuild.js` (core), `build-esbuild-esm.js` + `transpile.js`
+(CLI), `tsconfig*.json` (all repos), `package.json` `exports` maps.
+
+| Modality | Extension | How produced | Consumed via |
+|---|---|---|---|
+| TypeScript sources | `.ts` (+ `.js` via `allowJs`) | authored directly; `tsconfig*.json` in every repo | `transpile.js` / `tsc` / esbuild |
+| CJS entry | `.cts` (`src/index.cts`) | esbuild bundle, `format:cjs`, `platform:node` → `public/cjs` | `require()` → `./public/cjs/index.cjs` |
+| ESM entry | `.mts` (`src/index.mts`) | esbuild bundle, `format:esm`, `platform:browser` → `public/esm` | `import` → `./public/esm/index.mjs` |
+| Per-file CJS | `.ts` → `.js` | `transpile.js` (TS compiler API) over `src/**/*.ts`, unbundled | `require('pkg/path')` → `./public/cjs/*.cjs` shims |
+| Per-file ESM | `.ts` → `.mjs` | esbuild `bundle:false`, `format:esm`, `outExtension:{".js":".mjs"}`, `target:node22`, `sourcemap:true`, `keepNames:true` | `import 'pkg/path'` → `./public/esm/*.mjs` |
+| Browser bundle | `.ts` (`src/QCObjects.ts`) | esbuild IIFE bundle, `platform:browser` → `public/browser/QCObjects.js` | `<script>` tag (no bundler needed) |
+| Type declarations | `.d.ts` | `tsc -p tsconfig.d.json` → `public/types/` (+ `./types/*` subpath) | `import` type resolution, Deno |
+
+- **No TSX/JSX:** zero `.tsx`/`.jsx` files exist in any repo and no JSX transform
+  is configured (`tsconfig` has no `jsx` option; esbuild uses the `js` loader).
+  Components MUST use HTML templates + `{{}}` bindings, never JSX. Adding JSX
+  support REQUIRES a major-line decision with loader + `jsx` config + this spec
+  updated first.
+- **ESM asset quirk (CLI):** `transpile.js` post-passes `public/cjs/**/*.js` to
+  rewrite dynamic `import()` of `.json/.jsonp/.md/.mdc/.text/.txt` asset paths —
+  keep asset imports to those extensions or extend `extensionsToConvert` in the
+  same PR.
+- **QCObjects import interop (CLI esbuild plugin):** static `qcobjects` imports
+  stay external; dynamic imports are rewritten through a `__toESM(require())`
+  shim (`loader:'js'`). Dual-package consumers MUST test both `require()` and
+  `import` paths after build changes.
+- The `exports` map MUST keep the `./*.js|cjs|mjs` extension shims so deep
+  imports resolve per-modality (`./public/*.js`, `./public/cjs/*.cjs`,
+  `./public/esm/*.mjs`) alongside the `./*` dual branch.
+
 ## Script tables (normative — every repo MUST keep these names/meanings)
 
 Core/SDK/CLI shared: `build`, `build:ts`, `build:ts-types`, `build:browser`,
@@ -46,6 +78,30 @@ App template deltas (`qcobjects-new-app`): `test` = eslint + jasmine;
 `collab`, `shell`, `createcert`, `http-server`, `gae-server`,
 `build`/`build:ts` (TS→JS), `publish:local`; parcel `targets.default.distDir =
 public` — `public/` MUST NOT be committed.
+
+## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
+
+Framework repos ship no JSX transform (`tsconfig` has no `jsx` option; zero
+`.tsx`/`.jsx` in core/SDK/CLI). Apps MAY still author components as
+`src/jsx/*.jsx` under these rules:
+
+- `.jsx` files contain plain JS component classes with template literals and
+  `$…()` meta processors (e.g. `$mapper(li,options)` inside `template`) —
+  NOT React-style angle-bracket syntax.
+- Two-stage build: (1) `build:jsx`: `esbuild src/jsx/*.jsx --bundle
+  --outdir=src/js --format=esm --target=es2021 --loader:.js=jsx` (the jsx loader
+  permits the extension; markup stays in strings); (2) `build:js`: bundle
+  `src/js/*.js` to the served root as usual.
+- **React interop is allowed but partial (not demonstrated in the reference app,
+  which ships no React dependency):** the same `--loader:.js=jsx` setup accepts
+  angle-bracket syntax — esbuild's default classic transform emits
+  `React.createElement` calls, so adding React plus a `jsx-factory` decision
+  compiles. Interop is NOT full by design: templating differs between the
+  frameworks (QCObjects `{{}}` + `$…()` + `.tpl.html` vs React's virtual DOM),
+  but React components MAY use QCObjects templates under the hood (e.g. React
+  renders a mount shell, QCObjects builds components inside it, or a QCObjects
+  template hosts a React root). Either direction MUST own exactly one renderer
+  per DOM subtree — never let both frameworks reconcile the same nodes.
 
 ## `postversion` rule (normative)
 

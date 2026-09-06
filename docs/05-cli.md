@@ -29,6 +29,76 @@ Node >= 22, npm >= 10; install with `npm i --legacy-peer-deps`.
   `launch <appname>`; `-V/--version`, `-h/--help`; per-command help via
   `qcobjects-cli [command] --help`.
 
+- Built-in command surface (`qcobjects [options] [command]`):
+  `create <appname>`, `publish <appname>`, `generate-sw <appname>`,
+  `launch <appname>`; `-V/--version`, `-h/--help`; per-command help via
+  `qcobjects-cli [command] --help`.
+
+## Built-in commands, handlers, and libs (normative)
+
+The framework ships a minimal set of built-ins that are always available
+without installing extra packages. All other capabilities enter via the
+keyword autoload contract ([05-cli](./05-cli.md) § Handlers/plugins/commands autoload,
+[16-addons](./16-addons.md)).
+
+- **Built-in commands** (registered in `cli-main.ts`):
+  `create`, `publish`, `upgrade-to-enterprise`, `generate-sw`, `launch`.
+  Each is implemented in `choiceOption.*` and may accept sub-flags
+  (`--pwa`, `--amp`, `--php`, `--custom`, `--tests`).
+
+- **Built-in handler** (`com.qcobjects.backend.microservice.static`):
+  registered by `defaultsettings.ts` at boot when `backend.routes` is empty.
+  Serves the framework's own assets with CORS `*`:
+  - `QCObjects.js` (core source)
+  - `QCObjects-SDK.js` (SDK entry)
+  - `/qcobjects-sdk/*` (entire SDK tree)
+  This handler is a `BackendMicroservice` subclass that performs static-file
+  redirection; it is NOT a general-purpose static file server.
+
+- **Core libraries** (always present as peer dependencies):
+  `qcobjects` (core framework) and `qcobjects-sdk` (controllers, views,
+  components, effects, cloud auth, i18n). These are NOT autoloaded — they
+  are hard peer dependencies of every QCObjects app and CLI command.
+
+- **No other built-in handlers, libs, or commands exist.** Any additional
+  capability (payment handlers, email libs, admin panels, custom commands)
+  MUST enter via the autoload keyword contract (`qcobjects-handler`,
+  `qcobjects-lib`, `qcobjects-command`, `qcobjects-admin-lib`) or explicit
+  `require`/`import` in app code.
+
+## Custom templates (`create --custom`, normative)
+
+Source: `src/cli-main.ts` (`choiceOption.create`, `copyTemplate`), pinned at
+`https://github.com/QCObjects/qcobjects-cli/blob/v2.5.158/src/cli-main.ts`.
+
+- **Flags:** `create <appname>` resolves the template package by flag:
+  `--amp` → `qcobjects-ecommerce-amp`, `--pwa` (or no flag) → `qcobjectsnewapp`,
+  `--php` → `qcobjectsnewphp`, `--custom <templateappname>` → any npm package
+  name, `--tests` → test suite. `publish` mirrors the same flags.
+- **Flow (binding):** `npm init -y` → `npm i --save-dev <template>` → adopt the
+  template's `package.json` (renamed to `<appname>`, version reset to `1.0.0`,
+  `repository` cleared) → `copyTemplate()` from the installed package dir into
+  the project (excluding `package.json`, `node_modules`, `.DS_Store`) →
+  `npm uninstall <template>` + `npm install qcobjects-cli` + full `npm i`.
+- **Key consequence:** the template package is scaffolding only — installed,
+  copied, then UNINSTALLED. Apps MUST NOT retain a runtime dependency on their
+  template package; all cohesion lives in the copied files
+  (see [06-app-structure](./06-app-structure.md)).
+- **Authoring custom templates:** any npm package with the app layout
+  ([06-app-structure](./06-app-structure.md)) + a `package.json` works as a
+  `--custom` template. Template packages SHOULD be named
+  `qcobjects-template-*` and MUST declare the layout they stamp in their README.
+- **Beyond apps — custom commands/libs/handlers:** `copyTemplate` copies the
+  whole package dir, so `--custom` templates MAY stamp any package kind, not
+  just apps: a command starter (class in a `com.qcobjects.cli.commands.*`
+  package ending in `CommandHandler`, picked up by `getPluginCommandsList()` and
+  constructed with `{switchCommander}`), a lib starter (`qcobjects-lib`
+  keyword), or a handler starter (`qcobjects-handler` keyword, microservice
+  skeleton). The stamped package then follows the autoload contract
+  (§ Handlers/plugins/commands autoload) and the add-on lifecycle
+  ([16-addons](./16-addons.md)). Prefer stamping starters over documenting
+  manual file creation.
+
 ## Binaries (normative)
 
 `qcobjects` (main) MUST exist alongside: `qcobjects-server`
@@ -55,11 +125,43 @@ Node >= 22, npm >= 10; install with `npm i --legacy-peer-deps`.
   version, enterprise, collab), registered via `cli-commands.ts`.
 - Modules import `qcobjects` and use `InheritClass`, `Package()`, `Export()`,
   `CONFIG`, `logger`, `Component`, `Service` (source convention, binding).
-- Plugin autodiscovery: scan `dependencies`/`devDependencies` for
-  `qcobjects-lib`, `qcobjects-handler`, `qcobjects-command` keywords.
+- Plugin autodiscovery: see "Handlers/plugins/commands autoload" below.
 - Entrypoints: `qcobjects-cli.ts`, `qcobjects-http{-2,}-server.ts`,
   `qcobjects-shell.ts`, `qcobjects-collab.ts`; Deno via `deno.json` + `mod.ts`.
 - `createcert` generates self-signed local TLS; production MUST use external certs.
+
+## Handlers/plugins/commands autoload (normative)
+
+Source: `src/defaultsettings.ts` (`__load_default_settings__`, runs at CLI boot;
+`__reset_settings__` re-runs it), pinned at
+`https://github.com/QCObjects/qcobjects-cli/blob/v2.5.158/src/defaultsettings.ts`.
+
+- **Scan:** `<projectPath>/package.json` `dependencies` (and `devDependencies`
+  for dev commands) are read; each installed package's own `package.json`
+  `keywords` are inspected (cached per package) for `qcobjects-lib`,
+  `qcobjects-handler`, `qcobjects-command`. Matches are `import()`ed via
+  `findPackageNodePath` resolution.
+- **Flags:** master `autodiscover` OR per-type `autodiscover_libs`,
+  `autodiscover_handlers`, `autodiscover_commands`. CLI built-in defaults turn
+  ON `autodiscover`, `autodiscover_commands`, `autodiscover_handlers`
+  (`defaultsettings.ts` lines ~100-102) — so autoload is active unless the app
+  `config.json` explicitly sets them `false`. `autodiscover_libs` has NO built-in
+  default: libs load only with explicit opt-in. Production configs SHOULD set
+  exactly the flags they need and `false` for the rest (least privilege:
+  every auto-imported package runs code at boot).
+- **Order:** libs → handlers → commands → devCommands, each as `Promise.all`
+  over dynamic imports.
+- **Failure semantics:** lib/handler load errors warn and continue
+  (`An error ocurred loading libs/handlers`); command load errors are FATAL
+  (logged, rethrown — boot aborts). A broken `qcobjects-command` dependency
+  therefore blocks server start by design.
+- **Registry:** discovered lists are published under `CONFIG.backend` as
+  `libs`, `handlers`, `commands`, `devCommands`, plus the raw `dependencies` /
+  `devDependencies` name lists; `backend.plugins = commands + devCommands`.
+  Introspection MUST read these keys, never re-scan `node_modules`.
+- **Publishing contract:** a handler/plugin/command package MUST declare its
+  role in `package.json` `keywords` (`qcobjects-handler`, `qcobjects-command`,
+  or `qcobjects-lib`) or it will never load, no matter the flags.
 
 ## Synced semantic versioning (normative, from CLI README)
 
