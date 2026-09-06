@@ -35,7 +35,7 @@ keyword contract ([05-cli](./05-cli.md) § autoload) but are listed elsewhere.
 | [qcobjects-handler-openapi](https://github.com/QCObjects/qcobjects-handler-openapi) | handler | Generic Open API request handler | stable |
 | [qcobjects-handler-contactform](https://github.com/QCObjects/qcobjects-handler-contactform) | handler | Contact-form endpoint (`/rest/contactform`) → email + Mailchimp subscriber notification | stable |
 | [qcobjects-handler-mockup](https://github.com/QCObjects/qcobjects-handler-mockup) | handler | Mock backend services for development/test | stable |
-| `QCObjects/qcobjects-admin` (private repo, members only) | handler (`qcobjects-handler`, `v1.0.1`) | Admin panel for QCObjects apps. MUST be uninstalled before production deploys | stable, dev-only |
+| [qcobjects-admin](https://github.com/QCObjects/qcobjects-admin) | handler (`qcobjects-handler`, `v1.0.1`) | Admin panel for QCObjects apps. MUST be uninstalled before production deploys | stable, dev-only |
 | [qcobjects-admin-lib-db-sqlite3](https://github.com/QCObjects/qcobjects-admin-lib-db-sqlite3) | admin storage (`qcobjects-admin-lib`) | SQLite3 backend for `qcobjects-admin` | stable |
 | [qcobjects-lib-cosmosdb](https://github.com/QCObjects/qcobjects-lib-cosmosdb) | data lib | Microsoft CosmosDB adapter; configures via `$ENV(...)` (the pattern that proved cloud-native readiness for the v3 roadmap) | stable |
 | [qcobjects-lib-sendemail](https://github.com/QCObjects/qcobjects-lib-sendemail) | data lib | Email sending via NodeMailer + Gmail (building block behind contact-form notifications) | stable |
