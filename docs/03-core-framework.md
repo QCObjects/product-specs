@@ -26,6 +26,24 @@ Build/test detail: [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)
   `testsClassFactorySpec`, `testsGlobalFeaturesSpec`, `testsTypeSpec`);
   `npm test` MUST run lint + full suite green.
 
+## TypeScript posture (normative)
+
+- **Runtime requires no transpiler:** apps MAY be pure `.js` — the browser bundle
+  runs as-is; `Class()`/`Package()`/`Import()` work in plain JavaScript with zero
+  build step (see [06-app-structure](./06-app-structure.md) boot sequence).
+- **Transpilers allowed:** apps MAY be authored in TypeScript — templates ship
+  `src/js/*.ts` + `*.d.ts` alongside compiled output and a binding `build:ts`
+  script; `tsc` declaration builds are part of every repo's pipeline
+  (see [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)).
+- **Framework authored in TypeScript:** core `src/` is 78 `.ts` files / 0 `.js`
+  (SDK: 26 `.ts` / 0 `.js`) at `v2.5.142`/`v2.5.105`; every repo carries
+  `tsconfig.json` + `tsconfig.d.json` + `tsconfig.jasmine.json` and ships
+  first-party declarations under `public/types/` (the `types` + `exports`
+  contract above). Type coverage MUST NOT regress: new public API without
+  declarations fails the release.
+- **Deno:** the CLI is Deno-compatible (`deno.json` + `mod.ts`, strict
+  compiler options) — types flow to Deno consumers via the same declarations.
+
 ## Class system (normative)
 
 - `Class(name, definition)` / `Class(name, Parent, definition)` declares;

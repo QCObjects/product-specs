@@ -25,6 +25,10 @@ Covers the product identity across `qcobjects` (core), `qcobjects-sdk`,
 - **Thesis:** front-end and back-end coded together with a common syntax in pure
   JavaScript. Cross-browser, cross-platform, cross-frame. No TypeScript, no
   transpiler required to run; pure JavaScript with zero code dependencies.
+  Transpilers are NOT required but ARE allowed: apps MAY be authored in
+  TypeScript (templates ship `build:ts`), and the framework itself is now
+  authored natively in TypeScript (see [03-core-framework](./03-core-framework.md)
+  § TypeScript posture) with first-party type declarations.
 - **Standard basis:** [ECMAScript® 2020 Language Specification](https://tc39.es/ecma262/)
   (ECMA-262). The `Class` factory (capital C) is the cross-browser declaration
   helper; recent versions ALSO accept native ES `class`/`extends` + `new`
