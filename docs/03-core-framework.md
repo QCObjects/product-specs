@@ -60,6 +60,32 @@ Class('MyClassName',InheritClass,{
 var o = New(MyClassName,{ propertyName1:1, propertyName2:"some value" });
 ```
 
+## Native `class` / `new` interop (normative)
+
+Recent framework versions accept native ES class syntax everywhere the
+factory syntax works — detection via `__is_raw_class__` (public API:
+a function whose source starts with `class`), pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/is_raw_class.ts`.
+
+- **Declare natively:** `class Main extends InheritClass {}` is a first-class
+  class definition; `New(Main, {})` instantiates it (covered by `testsSpec`:
+  `__instanceID` is a number, `__classType` is `"Main"`).
+- **Package natively:** `Package('org.pkg',[class Card extends Component {...}])`
+  registers each class with namespace stamping; a single class may also be
+  passed directly — `Package('org.pkg', MyClass)` sets
+  `__definition.__namespace` + `__namespace` and registers it.
+- **Resolve natively:** `ClassFactory('org.pkg.Name')` returns the native class
+  from the package (last registered wins the bare reference, same rule as above).
+- **Instantiate natively:** `New()` is defined as `new __class__(args)`, so the
+  native `new` operator works too — `new FormController(o)`, `new Move()`,
+  `new i18n_messages_es()` (all used across the SDK sources, which are themselves
+  written in native class syntax).
+- **Introspection:** `__getType__` names raw classes via `constructor.name`;
+  `LegacyCopy` copies them branch-aware. Native and factory classes MAY be mixed
+  freely in one package.
+- New code SHOULD prefer native `class`/`extends` syntax; the `Class()` factory
+  remains supported for cross-browser legacy paths and dynamic definitions.
+
 ## CONFIG & processors (normative)
 
 - `CONFIG.set(key, value)` / `CONFIG.get(key)`; `useConfigService=true` loads

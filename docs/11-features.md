@@ -17,6 +17,7 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Feature | Core | SDK | CLI | Templates | Status |
 |---|---|---|---|---|---|
 | Class system + MVC primitives | ✅ | — | — | — | stable |
+| Native `class`/`extends` + `new` interop | ✅ | ✅ | — | ✅ | stable |
 | Package/Import/Export + routing | ✅ | — | — | — | stable |
 | Storage cache, i18n, Crypt, codecs | ✅ | — | — | — | stable |
 | Array/Collection/math helpers | ✅ | — | — | — | stable |
