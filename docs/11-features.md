@@ -32,6 +32,7 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Synced semver (`v-*`) + changelog | — | — | ✅ | ✅ | stable |
 | PWA shell (manifest, SW, offline, lazy-src) | — | — | template | ✅ | stable |
 | `$ENV()`/`$config()` + custom processors | ✅ | ✅ | ✅ | ✅ | stable |
+| Keyword autoload (libs/handlers/commands) | — | — | ✅ | ✅ | stable |
 | Encrypted `config.json` | ✅ | — | ✅ | ✅ | stable |
 | Backend routes + `BackendMicroservice` | ✅ | — | ✅ | ✅ | stable |
 | PHP handler bridge | — | — | ✅ | — | beta |
