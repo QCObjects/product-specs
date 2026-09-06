@@ -40,6 +40,7 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Keyword autoload (libs/handlers/commands) | — | — | ✅ | ✅ | stable |
 | Encrypted `config.json` | ✅ | — | ✅ | ✅ | stable |
 | Backend routes + `BackendMicroservice` | ✅ | — | ✅ | ✅ | stable |
+| SSR via FileDispatcher (`useTemplate`) | — | — | ✅ | ✅ | stable |
 | PHP handler bridge | — | — | ✅ | — | beta |
 | Deno support (`mod.ts`) | ✅ core | — | ✅ | — | beta |
 | MIT license line | — | — | — | — | planned (P1) |

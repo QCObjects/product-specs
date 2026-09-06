@@ -44,6 +44,34 @@ Cross-cutting rules:
 - Browser, ESM, and CJS distributions MUST all be published
   (`public/browser`, `public/esm`, `public/cjs` + `public/types`).
 
+## Rendering model: CSR + opt-in SSR (normative)
+
+QCObjects renders on the client by default AND supports server-side rendering
+through the CLI server — same component pipeline both sides. Sources:
+`qcobjects-cli` `src/main-file.ts` (`FileDispatcher`), `src/defaultsettings.ts`.
+
+- **CSR (default):** components build in the live browser DOM (template XHR,
+  `{{}}` binding, routing against `location`, shadow roots). `Component.ts`
+  carries `isBrowser` guards for DOM-only behaviors (effects, fullscreen,
+  shadow attachment).
+- **SSR (opt-in):** `FileDispatcher` serves `.html`/`.tpl.html` files by
+  instantiating a real `Component` server-side in Node —
+  `New(Component, {name:"static_source", template: source, tplsource:"inline",
+  data:{…}, done({component}){ body = component.parsedAssignmentText }})` —
+  and sending `parsedAssignmentText` as the response body. Template binding,
+  `$…()` processors, and the template handler all run server-side exactly as
+  in the browser; no browser DOM is needed for this inline path.
+- **Gate:** SSR applies only when `CONFIG.get("useTemplate")` is true AND the
+  extension is `.html`/`.tpl.html` (CLI default: `useTemplate=false`).
+  Otherwise the file streams unrendered with its mime type + `cacheControl`.
+  Apps that want SSR MUST set `useTemplate:true` in `config.json`.
+- **Scope note:** SSR covers template+data rendering (the `parseTemplate` /
+  handler path). Browser-only behaviors (shadow DOM attachment, effects,
+  client routing, XHR-loaded external templates) still execute client-side on
+  hydration. `publish:static` remains a file copier, not a prerenderer.
+- Apps SHOULD still ship a crawlable static shell (meta/OG tags, `404.html`,
+  sitemap) for crawlers that don't execute JS when SSR is off.
+
 ## N-Tier doctrine (from the core README)
 
 QCObjects targets professional Multitier/N-Tier environments for scalability

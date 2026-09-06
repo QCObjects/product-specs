@@ -38,6 +38,9 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
 - `useLocalSDK` (local vs `sdk.qcobjects.dev`), `useLegacyHTTP`,
   `enableShellCommands` (CLI default `true`; templates SHOULD set `false`
   unless shell commands are required).
+- `useTemplate` (CLI default `false`): `true` enables server-side rendering of
+  `.html`/`.tpl.html` through `FileDispatcher` (see [02-architecture](./02-architecture.md)
+  § Rendering model).
 - `private-key-pem` / `private-cert-pem` (e.g. `"$config(domain)-privkey.pem"`).
 - `domain`, `certificate_provider`, plus server-side `basePath`, `projectPath`,
   `dataPath` (e.g. `/etc/qcobjects/data/`).
