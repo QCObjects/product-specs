@@ -67,6 +67,36 @@ Build/test detail: [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)
 - `GLOBAL.set/get` reaches the global scope store.
 - `waitUntil(effect, condition)` runs once when true (use sparingly).
 
+## Component inheritance (normative)
+
+Sources: `src/Class.ts`, `src/InheritClass.ts`, `src/super.ts`, `src/is_a.ts`,
+pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/Class.ts`.
+
+- **Two equivalent modes.** Factory: `Class('Child', Parent, definition)` builds
+  `class extends Parent` with the parent's `__definition` merged in
+  (`LegacyCopy`, `__instanceID` stripped so IDs stay unique). Native:
+  `class Child extends Parent {…}`. Both produce a real prototype chain; both
+  register by name and resolve via `ClassFactory`. Mixed hierarchies (factory
+  parent + native child and vice versa) MUST work.
+- **Construction:** `InheritClass`'s constructor copies `__definition`, binds
+  function props from the init object to the instance, and assigns a read-only
+  `__instanceID`. Factory classes run the `_new_` hook; native classes use
+  `constructor(o)` + `super(o)` — pass the init object up in both modes or
+  inherited fields stay unset.
+- **`_super_` is registry-based, not chain-based:** `_super_('Parent','m')`
+  returns `ClassFactory('Parent')['m']`. It therefore works across packages but
+  REQUIRES the parent to be registered under exactly that name — renaming or
+  late-loading the parent breaks the call. Prefer native `super.m()` inside
+  native classes; reserve `_super_` for factory definitions and cross-package
+  reaches.
+- **Type checks:** `is_a(obj, typeName)` checks `hierarchy()` membership, then
+  `__getType__`/`ObjectName`, then `typeof`. Use it instead of `instanceof`
+  across package boundaries (duplicate module copies break `instanceof`).
+- **Rules:** names MUST NOT be forbidden words (`Class()` throws); every class
+  SHOULD extend `InheritClass` (directly or transitively) so `__instanceID`,
+  `__classType`, and `hierarchy()` exist; overrides MUST call the parent
+  implementation unless intentionally replacing it.
+
 **Canonical class example:**
 
 ```javascript
