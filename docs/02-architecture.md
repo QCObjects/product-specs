@@ -94,6 +94,31 @@ Package('cl.quickcorp.backend.signup',[
 
 (Note: `Date.now().toString()` in source; shape above.)
 
+## `BackendMicroservice` base API (normative)
+
+Source: `src/BackendMicroservice.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/BackendMicroservice.ts`.
+
+- **Construction:** `New(MicroserviceClass, {domain, basePath, body, stream, request})`;
+  the constructor stores all five, defaults `body` to `null`, runs `cors()`,
+  and wires dispatch. `stream`/`request`/`route`/`headers` stay available as
+  instance fields for the whole call.
+- **Verb dispatch:** stream `"data"` events route to `post(data)`; all other
+  request methods dispatch to same-named methods — `get`, `head`, `put`,
+  `delete`, `connect`, `options`, `trace`, `patch`. Override exactly the verbs
+  the route serves; default verb methods log and call `done()`.
+- **Answering:** set `this.body` (object, e.g. a JSON-RPC 2.0 envelope
+  `{jsonrpc:"2.0", result, id}`) then call `this.done()`. Never write the raw
+  stream unless implementing a custom transport.
+- **`cors()` semantics** (driven by `route.cors`):
+  `allow_origins` (`"*"` or list; mismatch empties the body and finishes —
+  fail-closed); `allow_credentials` (default `"true"`);
+  `allow_methods` (default `GET, OPTIONS, POST`); `allow_headers` (default `*`).
+  With no `route.cors` at all, validation is skipped (log only) — routes that
+  need browsers MUST declare `cors`.
+- The `com.qcobjects.backend.microservice.static` built-in serves
+  `redirect_to` file targets — use it for static routes instead of custom code.
+
 ## Backend routing contract (`config.json`)
 
 - Every route REQUIRES `path` + `microservice` (package string as indexing point).

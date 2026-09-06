@@ -128,6 +128,35 @@ let SERVICE_HOST = function (arg){
 Processor.setProcessor(SERVICE_HOST); // enables "$SERVICE_HOST(SERVICE_URL)"
 ```
 
+## Template meta processors `$…(…)` (normative)
+
+Separate from CONFIG processors: `$name(args)` placeholders inside component
+templates (and any string in processed config objects, via `processObject`
+recursion) are expanded by `Processor.process(template, component)` — matched by
+`\$name((.*))` and invoked as `fn(componentInstance, ...args.split(","))`.
+Sources: `src/Processor.ts`, `src/defaultProcessors.ts` (`setDefaultProcessors`),
+pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/Processor.ts`.
+
+Default meta processors (always registered):
+
+- `$mapper(componentName,valueName)` — renders a list value (component `data`/
+  prop, else global) as `<quick-component name="…" data-k="v" …>` items, one per
+  element with its keys as `data-*` attributes.
+- `$layout(portrait|landscape, cssfile)` — emits orientation/aspect-ratio
+  `@import` rules for the CSS file (mobile-first portrait set + landscape set).
+- `$component(name=…, componentClass=…, …)` — emits a
+  `<component name="…" componentClass="…" …>` tag declaration.
+- `$quick_component(name=…, componentClass=…, …)` — same for `<quick-component>`.
+- `$repeat(length, text)` — repeats `text` `length` times, substituting
+  `{{index}}` per occurrence (built on `range(length)`).
+- `$ENV(VAR)` / `$config(key)` resolve in the same pass where applicable
+  (Node/CLI/Collab for `$ENV`; everywhere for `$config`).
+
+Rules: custom meta processors register via `Processor.setProcessor(fn)` with
+non-arrow functions (`this` is the handler); names MUST be alphanumeric;
+processors MUST be pure string transforms (no DOM writes — return markup);
+templates SHOULD prefer `$component`/`$mapper` over hand-concatenated tags.
+
 ## Component model (normative)
 
 **Class properties:** `domain`, `basePath` (auto); `templateURI` (use
