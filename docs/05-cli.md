@@ -29,6 +29,11 @@ Node >= 22, npm >= 10; install with `npm i --legacy-peer-deps`.
   `launch <appname>`; `-V/--version`, `-h/--help`; per-command help via
   `qcobjects-cli [command] --help`.
 
+- Built-in command surface (`qcobjects [options] [command]`):
+  `create <appname>`, `publish <appname>`, `generate-sw <appname>`,
+  `launch <appname>`; `-V/--version`, `-h/--help`; per-command help via
+  `qcobjects-cli [command] --help`.
+
 ## Built-in commands, handlers, and libs (normative)
 
 The framework ships a minimal set of built-ins that are always available
@@ -60,6 +65,39 @@ keyword autoload contract ([05-cli](./05-cli.md) § Handlers/plugins/commands au
   MUST enter via the autoload keyword contract (`qcobjects-handler`,
   `qcobjects-lib`, `qcobjects-command`, `qcobjects-admin-lib`) or explicit
   `require`/`import` in app code.
+
+## Custom templates (`create --custom`, normative)
+
+Source: `src/cli-main.ts` (`choiceOption.create`, `copyTemplate`), pinned at
+`https://github.com/QCObjects/qcobjects-cli/blob/v2.5.158/src/cli-main.ts`.
+
+- **Flags:** `create <appname>` resolves the template package by flag:
+  `--amp` → `qcobjects-ecommerce-amp`, `--pwa` (or no flag) → `qcobjectsnewapp`,
+  `--php` → `qcobjectsnewphp`, `--custom <templateappname>` → any npm package
+  name, `--tests` → test suite. `publish` mirrors the same flags.
+- **Flow (binding):** `npm init -y` → `npm i --save-dev <template>` → adopt the
+  template's `package.json` (renamed to `<appname>`, version reset to `1.0.0`,
+  `repository` cleared) → `copyTemplate()` from the installed package dir into
+  the project (excluding `package.json`, `node_modules`, `.DS_Store`) →
+  `npm uninstall <template>` + `npm install qcobjects-cli` + full `npm i`.
+- **Key consequence:** the template package is scaffolding only — installed,
+  copied, then UNINSTALLED. Apps MUST NOT retain a runtime dependency on their
+  template package; all cohesion lives in the copied files
+  (see [06-app-structure](./06-app-structure.md)).
+- **Authoring custom templates:** any npm package with the app layout
+  ([06-app-structure](./06-app-structure.md)) + a `package.json` works as a
+  `--custom` template. Template packages SHOULD be named
+  `qcobjects-template-*` and MUST declare the layout they stamp in their README.
+- **Beyond apps — custom commands/libs/handlers:** `copyTemplate` copies the
+  whole package dir, so `--custom` templates MAY stamp any package kind, not
+  just apps: a command starter (class in a `com.qcobjects.cli.commands.*`
+  package ending in `CommandHandler`, picked up by `getPluginCommandsList()` and
+  constructed with `{switchCommander}`), a lib starter (`qcobjects-lib`
+  keyword), or a handler starter (`qcobjects-handler` keyword, microservice
+  skeleton). The stamped package then follows the autoload contract
+  (§ Handlers/plugins/commands autoload) and the add-on lifecycle
+  ([16-addons](./16-addons.md)). Prefer stamping starters over documenting
+  manual file creation.
 
 ## Binaries (normative)
 
