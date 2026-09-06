@@ -26,8 +26,10 @@ Covers the product identity across `qcobjects` (core), `qcobjects-sdk`,
   JavaScript. Cross-browser, cross-platform, cross-frame. No TypeScript, no
   transpiler required to run; pure JavaScript with zero code dependencies.
 - **Standard basis:** [ECMAScript® 2020 Language Specification](https://tc39.es/ecma262/)
-  (ECMA-262). The `Class` factory (capital C) is deliberately NOT the ES2015
-  `class` — it is a cross-browser compatible declaration helper.
+  (ECMA-262). The `Class` factory (capital C) is the cross-browser declaration
+  helper; recent versions ALSO accept native ES `class`/`extends` + `new`
+  everywhere the factory works (see [03-core-framework](./03-core-framework.md)
+  § Native interop) — new code SHOULD prefer native syntax.
 - **Interop:** designed to compose with CSS frameworks (Foundation, Bootstrap)
   and mobile frameworks (PhoneGap, Onsen UI).
 
