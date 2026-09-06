@@ -52,6 +52,19 @@ flowchart LR
     T --> N[npm dist-tag<br/>latest · beta · lts]
 ```
 
+## Component tree (Nested Components Stack)
+
+```mermaid
+flowchart TB
+    G[global.componentsStack] --> C1[Component main<br/>cached · MainController]
+    C1 --> T1[template main.tpl.html<br/>{{data}} bindings]
+    C1 --> C2[Component grid<br/>GridController 2x2]
+    C2 --> S1[subcomponent card xN<br/>DataGridController mapping]
+    C1 --> C3[Component signup-form<br/>FormField · FormController]
+    C3 --> SVC[SignupClientService<br/>JSONService POST]
+    SVC --> MS[Microservice<br/>org.quickcorp.backend.signup]
+```
+
 ## Normative
 
 - Diagrams MUST match the specs: any layer/contract change MUST update the
