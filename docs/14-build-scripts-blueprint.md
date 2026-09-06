@@ -79,6 +79,24 @@ App template deltas (`qcobjects-new-app`): `test` = eslint + jasmine;
 `build`/`build:ts` (TS→JS), `publish:local`; parcel `targets.default.distDir =
 public` — `public/` MUST NOT be committed.
 
+## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
+
+Framework repos ship no JSX transform (`tsconfig` has no `jsx` option; zero
+`.tsx`/`.jsx` in core/SDK/CLI). Apps MAY still author components as
+`src/jsx/*.jsx` under these rules:
+
+- `.jsx` files contain plain JS component classes with template literals and
+  `$…()` meta processors (e.g. `$mapper(li,options)` inside `template`) —
+  NOT React-style angle-bracket syntax.
+- Two-stage build: (1) `build:jsx`: `esbuild src/jsx/*.jsx --bundle
+  --outdir=src/js --format=esm --target=es2021 --loader:.js=jsx` (the jsx loader
+  permits the extension; markup stays in strings); (2) `build:js`: bundle
+  `src/js/*.js` to the served root as usual.
+- Angle-bracket JSX syntax is NOT supported by this pattern (no `jsx-factory`
+  configured — classic-transform output would reference a missing runtime).
+  Adopting real JSX syntax REQUIRES a bundler `jsx-factory`/`jsx-runtime`
+  decision plus this spec updated first.
+
 ## `postversion` rule (normative)
 
 - Default: `"postversion": "git push && git push --tags"`.
