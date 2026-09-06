@@ -20,6 +20,7 @@
     "serverPortHTTPS": { "type": ["string", "integer"] },
     "useLocalSDK": { "type": "boolean", "default": false },
     "useLegacyHTTP": { "type": "boolean", "default": false },
+    "useTemplate": { "type": "boolean", "default": false },
     "enableShellCommands": { "type": "boolean", "default": false },
     "private-key-pem": { "type": "string" },
     "private-cert-pem": { "type": "string" },

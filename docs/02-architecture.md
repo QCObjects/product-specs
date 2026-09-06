@@ -44,26 +44,33 @@ Cross-cutting rules:
 - Browser, ESM, and CJS distributions MUST all be published
   (`public/browser`, `public/esm`, `public/cjs` + `public/types`).
 
-## Rendering model: CSR-only, no SSR (normative)
+## Rendering model: CSR + opt-in SSR (normative)
 
-QCObjects renders exclusively on the client. There is no server-side rendering
-in the framework, and none is planned on the v2.x line — this absence is a
-documented posture, not a gap.
+QCObjects renders on the client by default AND supports server-side rendering
+through the CLI server — same component pipeline both sides. Sources:
+`qcobjects-cli` `src/main-file.ts` (`FileDispatcher`), `src/defaultsettings.ts`.
 
-- Components build in the live browser DOM (`Component.ts` carries 23
-  `isBrowser` guards; every non-browser branch is an explicit
-  `not yet implemented` stub). Templates load over XHR, binding and routing
-  resolve against `location`/`document`/`window`, and shadowed components need
-  a real `shadowRoot`.
-- The server's job is static files + data APIs (`backend.routes`), never HTML
-  rendering. `publish:static` copies files unrendered (it is a deploy copier,
-  not a prerenderer).
-- Consequences: apps MUST ship a crawlable static shell (`index.html` with
-  meta/OG tags, `404.html`, sitemap) and MUST NOT depend on pre-rendered
-  component HTML existing at serve time; crawlers that don't execute JS see
-  the shell only. If SSR/SSG is ever adopted, it REQUIRES a dedicated spec +
-  major-line decision first (candidate vehicle: the v3.2+ Wasm/FastAPI layer,
-  not the Node server).
+- **CSR (default):** components build in the live browser DOM (template XHR,
+  `{{}}` binding, routing against `location`, shadow roots). `Component.ts`
+  carries `isBrowser` guards for DOM-only behaviors (effects, fullscreen,
+  shadow attachment).
+- **SSR (opt-in):** `FileDispatcher` serves `.html`/`.tpl.html` files by
+  instantiating a real `Component` server-side in Node —
+  `New(Component, {name:"static_source", template: source, tplsource:"inline",
+  data:{…}, done({component}){ body = component.parsedAssignmentText }})` —
+  and sending `parsedAssignmentText` as the response body. Template binding,
+  `$…()` processors, and the template handler all run server-side exactly as
+  in the browser; no browser DOM is needed for this inline path.
+- **Gate:** SSR applies only when `CONFIG.get("useTemplate")` is true AND the
+  extension is `.html`/`.tpl.html` (CLI default: `useTemplate=false`).
+  Otherwise the file streams unrendered with its mime type + `cacheControl`.
+  Apps that want SSR MUST set `useTemplate:true` in `config.json`.
+- **Scope note:** SSR covers template+data rendering (the `parseTemplate` /
+  handler path). Browser-only behaviors (shadow DOM attachment, effects,
+  client routing, XHR-loaded external templates) still execute client-side on
+  hydration. `publish:static` remains a file copier, not a prerenderer.
+- Apps SHOULD still ship a crawlable static shell (meta/OG tags, `404.html`,
+  sitemap) for crawlers that don't execute JS when SSR is off.
 
 ## N-Tier doctrine (from the core README)
 
