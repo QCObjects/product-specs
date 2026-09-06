@@ -17,8 +17,10 @@ This repo is the source of truth for framework, SDK, CLI, app structure, and the
 
 - Every doc has: Purpose, Scope, Normative statements (`MUST`/`SHOULD`/`MAY`), Verification
 - Normative language follows RFC 2119
-- Definitions live inline in specs; code links MUST be pinned to release tags
-  (e.g. `.../blob/v2.5.142/src/...`), never floating `development` links
+- Definitions live inline in specs; code links to QCObjects code repos MUST be
+  pinned to release tags (e.g. `.../blob/v2.5.142/src/...`), never floating
+  `development` links. Self-repo living refs (this repo's own files) MAY track
+  `development`.
 - Diagrams as Mermaid code blocks (renderable on GitHub); keep `.mmd` source in `diagrams/`
 - Cross-link docs relatively (`./architecture.md`, not absolute URLs)
 - English for all specs; keep filenames kebab-case
