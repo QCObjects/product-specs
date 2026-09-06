@@ -124,10 +124,35 @@ components module, no separate package export): `ModalFade extends Fade`
 
 - `org.qcobjects.models.Contact extends VO` — canonical value-object example;
   extend `VO` (not plain objects) for model data.
-- `org.qcobjects.cloud.auth.session.data.SessionData` and
-  `...session.usertoken.SessionUserToken` (both `InheritClass`) — token/data
-  holders for cloud-auth sessions; MUST go through the core storage cache,
-  MUST NOT log or persist raw passwords.
+
+## Session handling (normative)
+
+Sources: `src/ts/org.qcobjects.cloud.auth.session.{usertoken,data}.ts`, pinned at
+`https://github.com/QCObjects/qcobjects-sdk/blob/v2.5.105/src/ts/org.qcobjects.cloud.auth.session.usertoken.ts`.
+Status: `beta` (see [11-features](./11-features.md)) — API shape may still move.
+
+- **Token issuance** (`SessionUserToken extends InheritClass`): one singleton per
+  username in `global` under `userToken_<base64(username)>` (`getGlobalUser(...)`
+  creates-or-returns). The token is `_Crypt.encrypt("userAgent|username|timestamp",
+  origin-or-domain)` held in a `ComplexStorageCache` keyed by instance ID
+  (first access encrypts via `load`, later accesses hit `alternate`/cache).
+  Accessors: `getGlobalUser{,Token,Id,Priority}(username)`.
+- **Login credentials:** `getLoginCredentialsToken(username, password)` =
+  `_Crypt.encrypt(username+password, userToken)` — the password never travels or
+  persists raw; only the derived credential token leaves the client.
+- **Logout:** `closeGlobalSession(username)` clears the token cache, nulls the
+  global slot, and resets `SessionUserToken.user` to `{}`.
+- **Session data** (`SessionData extends InheritClass`): `sessionStorage`-backed,
+  keyed `session_<btoa(userToken)>` so each login's data is namespaced by its
+  token (`index(...)` throws unless the usertoken package is imported first).
+  A session container MUST be set first
+  (`setSessionContainer(...parts)`; `getSessionContainer()` throws when unset);
+  `save(...)` stringifies `sessionData` into the slot, `getSessionData(...)`
+  parses it back (`{}` when absent).
+- **Rules:** session reads/writes MUST go through these classes (never raw
+  `sessionStorage` keys); tokens MUST NOT be logged; credential tokens MUST be
+  re-derived per login, never stored; closing a session MUST clear both the
+  token cache and the `sessionStorage` slot.
 - `org.qcobjects.tools.canvas.CanvasTool`, `org.qcobjects.tools.layouts.BasicLayout`.
 - `org.qcobjects.tools.Process extends Timer` — named thread entry.
 - `org.qcobjects.views.GridView` (generic grid view).
