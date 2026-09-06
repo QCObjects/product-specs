@@ -247,6 +247,34 @@ templates SHOULD prefer `$component`/`$mapper` over hand-concatenated tags.
 **MVC:** `Controller` (base; `done()` fires per component load — the hook for
 dynamic components), `View`, `VO` (value object), `DDO` (dynamic data object).
 
+## Loading transport: XHR vs `fetch` (normative)
+
+Components and services load over different transports by purpose. Sources:
+`src/componentLoader.ts`, `src/serviceLoader.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/componentLoader.ts`.
+
+- **Component templates over HTTP(S) → XHR.** `componentLoader` opens an async
+  `XMLHttpRequest` with `component.method` (default `GET`), sends the stringified
+  `data` as the body, sets `Content-Type: text/html` (skipped on PhoneGap), and
+  treats status `200` as success. The `xhr` travels in the standard response as
+  `request`, so `done({request, component})` can inspect status/headers.
+  Success stores `responseText` as `component.template` (cached when
+  `cached:true`), then feeds the component; any other status rejects.
+- **`file:` URLs → `fetch`.** XHR cannot reliably read `file:` everywhere, so
+  `file:`-scheme template URLs use `fetch(url).then(response.text())` when
+  `"fetch" in top` (sync-XHR fallback otherwise). This is the local-preview /
+  hybrid-app path — same feed pipeline after the text arrives.
+- **Services → XHR always** (async forced; sync XHR is deprecated): custom
+  `service.headers` applied in a loop (function values skipped),
+  `withCredentials` honored, status `200` → `done({request: xhr, service})`,
+  anything else → `fail({request: xhr, service})` when defined, else reject.
+- **Cache short-circuit:** cached GET components skip the network entirely via
+  `ComplexStorageCache` (`alternate` path); non-GET always hits the network.
+- Rules: custom loaders MUST preserve the `{request, component|service}`
+  standard-response shape; MUST NOT switch template transport to `fetch` for
+  HTTP(S) (progress/status semantics live on the `xhr`); services MUST define
+  `fail()` whenever non-200 is a reachable outcome.
+
 ## Smart widgets (normative)
 
 Smart widgets let a component be declared as a native custom element instead of
