@@ -67,9 +67,11 @@ Build/test detail: [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)
 - `GLOBAL.set/get` reaches the global scope store.
 - `waitUntil(effect, condition)` runs once when true (use sparingly).
 
-## Component inheritance (normative)
+## Class & object inheritance (normative)
 
-Sources: `src/Class.ts`, `src/InheritClass.ts`, `src/super.ts`, `src/is_a.ts`,
+Applies to every QCObjects object — components, controllers, services, views,
+models (`Contact extends VO`), effects, and plain classes alike. Sources:
+`src/Class.ts`, `src/InheritClass.ts`, `src/super.ts`, `src/is_a.ts`,
 pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/Class.ts`.
 
 - **Two equivalent modes.** Factory: `Class('Child', Parent, definition)` builds
@@ -96,6 +98,13 @@ pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/Class.ts`.
   SHOULD extend `InheritClass` (directly or transitively) so `__instanceID`,
   `__classType`, and `hierarchy()` exist; overrides MUST call the parent
   implementation unless intentionally replacing it.
+- **Non-component chains:** inheritance is how the SDK is built —
+  `FormField extends Component`, `ButtonField/InputField/TextField/EmailField
+  extends FormField`, `DataGridController/GridController/FormController/
+  SliderController extends Controller`, `JSONService extends Service`,
+  `ModalFade extends Fade`, `Contact extends VO`, `SessionData extends
+  InheritClass`. Subclassing a framework class to specialize it (rather than
+  configuring the base) is the canonical extension pattern.
 
 **Canonical class example:**
 
