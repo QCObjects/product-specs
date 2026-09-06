@@ -51,6 +51,16 @@ Source: `src/cli-main.ts` (`choiceOption.create`, `copyTemplate`), pinned at
   ([06-app-structure](./06-app-structure.md)) + a `package.json` works as a
   `--custom` template. Template packages SHOULD be named
   `qcobjects-template-*` and MUST declare the layout they stamp in their README.
+- **Beyond apps — custom commands/libs/handlers:** `copyTemplate` copies the
+  whole package dir, so `--custom` templates MAY stamp any package kind, not
+  just apps: a command starter (class in a `com.qcobjects.cli.commands.*`
+  package ending in `CommandHandler`, picked up by `getPluginCommandsList()` and
+  constructed with `{switchCommander}`), a lib starter (`qcobjects-lib`
+  keyword), or a handler starter (`qcobjects-handler` keyword, microservice
+  skeleton). The stamped package then follows the autoload contract
+  (§ Handlers/plugins/commands autoload) and the add-on lifecycle
+  ([16-addons](./16-addons.md)). Prefer stamping starters over documenting
+  manual file creation.
 
 ## Binaries (normative)
 
