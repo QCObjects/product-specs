@@ -1,0 +1,14 @@
+flowchart TB
+    TAG["&lt;component&gt; tag / widget<br/>name · cached · data-* · *Class attrs"] --> INST[Component instance<br/>body · data · method]
+    INST --> CLS[class hierarchy<br/>Component subclass]
+    INST --> TPL[template<br/>inline / URI / none]
+    INST --> HDL[templateHandler<br/>Default or custom]
+    TPL --> HDL
+    HDL --> BIND["{{data}} binding<br/>$…() processors"]
+    BIND --> BODY[body DOM / shadowRoot]
+    INST --> CTL[controller<br/>done() per load]
+    INST --> VIEW[view]
+    INST --> EFF[effectClass]
+    INST --> SVC[services<br/>JSONService · serviceLoader]
+    INST --> SUB[subcomponents<br/>nested stack]
+    INST --> RTE[routings table<br/>path regex · {param}]
