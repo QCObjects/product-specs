@@ -1,0 +1,12 @@
+flowchart TB
+    LOC[location<br/>hash / pathname / search] --> WAY{routingWay<br/>from CONFIG}
+    WAY --> R1[Component main<br/>own routings table]
+    R1 -->|match path regex<br/>{param} groups| SEL1[routingSelected<br/>read-only]
+    SEL1 --> T1[template main.tpl.html<br/>render]
+    SEL1 --> SUB[__buildSubComponents__<br/>nested scan]
+    SUB --> R2[Subcomponent grid<br/>own routings table]
+    R2 -->|match| SEL2[routingSelected]
+    SEL2 --> T2[template grid.tpl.html<br/>render]
+    SEL2 --> R3[Sub-subcomponent card<br/>own routings table]
+    R3 -->|match| T3[template card.tpl.html<br/>render]
+    R3 -->|no routing children| DFLT[default template<br/>unconditional]
