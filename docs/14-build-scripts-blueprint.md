@@ -92,10 +92,16 @@ Framework repos ship no JSX transform (`tsconfig` has no `jsx` option; zero
   --outdir=src/js --format=esm --target=es2021 --loader:.js=jsx` (the jsx loader
   permits the extension; markup stays in strings); (2) `build:js`: bundle
   `src/js/*.js` to the served root as usual.
-- Angle-bracket JSX syntax is NOT supported by this pattern (no `jsx-factory`
-  configured — classic-transform output would reference a missing runtime).
-  Adopting real JSX syntax REQUIRES a bundler `jsx-factory`/`jsx-runtime`
-  decision plus this spec updated first.
+- **React interop is allowed but partial (not demonstrated in the reference app,
+  which ships no React dependency):** the same `--loader:.js=jsx` setup accepts
+  angle-bracket syntax — esbuild's default classic transform emits
+  `React.createElement` calls, so adding React plus a `jsx-factory` decision
+  compiles. Interop is NOT full by design: templating differs between the
+  frameworks (QCObjects `{{}}` + `$…()` + `.tpl.html` vs React's virtual DOM),
+  but React components MAY use QCObjects templates under the hood (e.g. React
+  renders a mount shell, QCObjects builds components inside it, or a QCObjects
+  template hosts a React root). Either direction MUST own exactly one renderer
+  per DOM subtree — never let both frameworks reconcile the same nodes.
 
 ## `postversion` rule (normative)
 
