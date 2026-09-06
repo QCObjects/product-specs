@@ -29,6 +29,38 @@ Node >= 22, npm >= 10; install with `npm i --legacy-peer-deps`.
   `launch <appname>`; `-V/--version`, `-h/--help`; per-command help via
   `qcobjects-cli [command] --help`.
 
+## Built-in commands, handlers, and libs (normative)
+
+The framework ships a minimal set of built-ins that are always available
+without installing extra packages. All other capabilities enter via the
+keyword autoload contract ([05-cli](./05-cli.md) § Handlers/plugins/commands autoload,
+[16-addons](./16-addons.md)).
+
+- **Built-in commands** (registered in `cli-main.ts`):
+  `create`, `publish`, `upgrade-to-enterprise`, `generate-sw`, `launch`.
+  Each is implemented in `choiceOption.*` and may accept sub-flags
+  (`--pwa`, `--amp`, `--php`, `--custom`, `--tests`).
+
+- **Built-in handler** (`com.qcobjects.backend.microservice.static`):
+  registered by `defaultsettings.ts` at boot when `backend.routes` is empty.
+  Serves the framework's own assets with CORS `*`:
+  - `QCObjects.js` (core source)
+  - `QCObjects-SDK.js` (SDK entry)
+  - `/qcobjects-sdk/*` (entire SDK tree)
+  This handler is a `BackendMicroservice` subclass that performs static-file
+  redirection; it is NOT a general-purpose static file server.
+
+- **Core libraries** (always present as peer dependencies):
+  `qcobjects` (core framework) and `qcobjects-sdk` (controllers, views,
+  components, effects, cloud auth, i18n). These are NOT autoloaded — they
+  are hard peer dependencies of every QCObjects app and CLI command.
+
+- **No other built-in handlers, libs, or commands exist.** Any additional
+  capability (payment handlers, email libs, admin panels, custom commands)
+  MUST enter via the autoload keyword contract (`qcobjects-handler`,
+  `qcobjects-lib`, `qcobjects-command`, `qcobjects-admin-lib`) or explicit
+  `require`/`import` in app code.
+
 ## Binaries (normative)
 
 `qcobjects` (main) MUST exist alongside: `qcobjects-server`
