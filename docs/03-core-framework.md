@@ -306,10 +306,13 @@ routing is recursive down the Nested Components Stack. Sources:
 `src/Component.ts` (`_generateRoutingPaths`), `src/routings.ts`, pinned at
 `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/routings.ts`.
 
-- **Declaration:** routings are child elements of the component body carrying a
-  `routing` attribute marker; each routing node's attributes become the routing
-  object (notably `path`, plus any custom attributes). Paths accumulate into
-  `component.routingPaths` and the global `routingPaths` registry.
+- **Declaration:** routings are literal `<routing>` child elements of the component
+  body, e.g. `<routing path="/one" name="page-one">` (reference: view-stack
+  widget example). Each node's attributes become the routing object (`path`,
+  `name`, optional per-routing `tplextension`, plus any custom attributes).
+  Paths accumulate into `component.routingPaths` and the global `routingPaths`
+  registry. (Correction: earlier text said “attribute marker” — the mechanism is
+  `querySelectorAll("routing")`, i.e. real elements.)
 - **Matching:** `path` is a regex where `{param}` segments become named capture
   groups; `__valid_routings__(routings, routingPath)` filters matches and
   reverses — later declarations win. `__routing_params__(routing, routingPath)`
@@ -318,6 +321,20 @@ routing is recursive down the Nested Components Stack. Sources:
   rebuild with `route()`. The current path resolves per `routingWay`
   (`hash` | `pathname` | `search`, from CONFIG, validated against
   `validRoutingWays`); location changes re-trigger matching.
+- **Name → template switch (`_reroute_`):** for every selected routing, the
+  component rebuilds `templateURI` from `routing.name` via `ComponentURI`
+  (base path + name + `tplextension` — per-routing override or the component's),
+  clears the body, sets `reload=true`, and `rebuild()`s. So `name` picks the
+  template file (`page-one` → `page-one.html`) while `path` picks when.
+- **Consuming the selection:** `routingSelected` is an array — read the current
+  view with `.pop().name` (reference pattern: inside `addComponentHelper` after
+  `__promise__` resolves, branch notifications/effects on the name). Dynamic
+  `{param}` values come from `__routing_params__`; with `assignRoutingParams`
+  set they merge into template `data` at `parseTemplate` time.
+- **Defaults & navigation:** declare catch-alls as empty/last paths (`/`, ``);
+  with `routingWay:"pathname"`, plain `<a href="/one">` anchors drive the
+  switch — no router calls needed. Pair routed views with `effectClass`
+  (e.g. a `TransitionEffect` of Fade+Move) for animated transitions.
 - **Nesting:** setting `body` triggers the routings builder for that component;
   `__buildSubComponents__` then builds each subcomponent, which builds its own
   routings in turn — so a route selects a chain of component + subcomponents,
