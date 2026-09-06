@@ -26,6 +26,20 @@ keyword contract ([05-cli](./05-cli.md) § autoload) but are listed elsewhere.
   per [08-ci-conventions](./08-ci-conventions.md)) and MUST NOT pin conflicting
   `qcobjects` majors.
 
+## Built-in vs Add-on (normative)
+
+The following capabilities are **built into the framework** and always available
+without installing any add-on package:
+
+| Capability | Role | Notes |
+|---|---|---|
+| `qcobjects` core | library | Framework foundation: class system, components, routing, loaders, processors |
+| `qcobjects-sdk` | library | Controllers, views, components, effects, cloud auth, i18n, models |
+| `create`, `publish`, `generate-sw`, `launch`, `upgrade-to-enterprise` | CLI commands | Registered in `cli-main.ts`, no extra install |
+| `com.qcobjects.backend.microservice.static` | handler | Serves `QCObjects.js`, `QCObjects-SDK.js`, `/qcobjects-sdk/*` with CORS `*`; injected by `defaultsettings.ts` when no routes exist |
+
+**Everything else** (payment handlers, email/SMS libs, admin panels, custom commands, storage backends) MUST be adopted as add-on packages via the keyword autoload contract. The catalogue below lists only those add-on packages.
+
 ## Catalogue (normative)
 
 | Add-on | Role / keywords | Purpose | Status |
