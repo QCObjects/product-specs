@@ -8,6 +8,7 @@
     "certificate_provider": { "type": "string" },
     "devmode": { "type": ["string", "boolean"] },
     "autodiscover": { "type": "boolean", "default": false },
+    "autodiscover_libs": { "type": "boolean", "default": false },
     "autodiscover_commands": { "type": "boolean", "default": false },
     "autodiscover_handlers": { "type": "boolean", "default": false },
     "documentRoot": { "type": "string" },
