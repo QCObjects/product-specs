@@ -57,6 +57,10 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
   `qcobjects-handler-<name>-template`, etc. — see [05-cli](./05-cli.md)).
   The `QCObjects-App-Templates/*` boilerplates were renamed into compliance
   (bare names → `-template` suffix); GitHub redirects preserve old URLs.
+- The npm package `name` SHOULD match the repo name. Counter-example on record:
+  repo `jeanmachuca-labs/qcobjects-jobs-template` publishes package
+  `qcobjects-jobs` (no keywords) — install-by-name still works, but discovery
+  and `--custom` auditing assume name parity, so keep them identical.
 
 ## CSS framework interoperability (normative)
 
@@ -81,9 +85,15 @@ The framework is CSS-agnostic: it ships plain CSS (SDK `src/css`, template
   source `.scss` files.
 - **Theme matrix:** every template ships `css/theme/{basic,cyan,redlight,xtra}`
   + `desktop/` + `mobile/` variants and `css/components/` per-component styles;
-  production apps MAY add themes (observed: `neumorphism` in the store app);
+  production apps MAY add themes (observed: `neumorphism` in the store app,
+  `job-detail` in the jobs template);
   new themes MUST follow the same directory shape. Switching themes MUST be a
   CSS swap only — no component or template changes.
+- **Auth-flow CSS kit:** multi-step auth UIs SHOULD group their styles as one
+  kit dir (reference: `css/theme/webflow-ui-kit/` with `signup`,
+  `forgot-password`, `reset-password`, `email-confirmation`, `third-party`
+  stylesheets) rather than scattering per-page CSS — the kit travels with the
+  auth templates as a unit.
 
 ## Configuration precedence (normative, from template README + CONFIG.md)
 

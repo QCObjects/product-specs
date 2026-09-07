@@ -108,6 +108,12 @@ Docker: `docker run -p 8080:8080 -p 8443:8443 qcobjects/qcobjects-newapp`
   the deploy step selects which file becomes the effective `config.json`
   (copy/symlink at deploy time — there is no framework `--config` flag).
   Secrets MUST differ per environment; never reuse prod credentials in debug.
+- **Data seeding:** list/data-driven apps MAY ship seed pairs — a source CSV
+  plus its converted `data/*.json` (reference: jobs template's
+  `datamercadopublico.csv` + `data/mercadopublico.json`). The JSON is what the
+  app loads; the CSV is the editable source of record. Regeneration MUST be
+  scripted (`csv→json` step documented in README), never hand-edited JSON
+  drifting from its CSV.
 - **Web publish chain:** production `publish:web` runs staged —
   `build:static` (copy `src/` → `build/`) → `build:ts` (test + `tsc`) →
   `publish:static` (`build/` → `public/`, excluding `js`) → `publish:esbuild`
