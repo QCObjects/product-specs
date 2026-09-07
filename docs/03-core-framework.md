@@ -271,23 +271,22 @@ Components and services load over different transports by purpose. Sources:
   `file:`-scheme template URLs use `fetch(url).then(response.text())` when
   `"fetch" in top` (sync-XHR fallback otherwise). This is the local-preview /
   hybrid-app path — same feed pipeline after the text arrives.
-- **Services (browser) → XHR always** (async forced; sync XHR is deprecated):
-  custom `service.headers` applied in a loop (function values skipped),
-  `withCredentials` honored, status `200` → `done({request: xhr, service})`,
-  anything else → `fail({request: xhr, service})` when defined, else reject.
-- **Services (Node) → `serviceLoaderNode`.** Server-side services execute via
-  native `https.request` (method/hostname/path/headers from the service, body =
-  stringified `data`, `maxRedirects: 20`), resolving the SAME
-  `{request, service}` shape (`service.done({request, service})` then resolve;
-  socket error rejects). Reference implementation:
-  `qcobjects-openai-api/src/js/packages/serviceLoaderNode.ts`. Any Node service
-  executor MUST preserve this shape so services run unchanged on both sides.
+- **Services → one `serviceLoader`.** It dispatches internally on
+  `service.kind` + runtime — callers never choose (full leg detail in
+  [02-architecture](./02-architecture.md) § `serviceLoader` dispatch detail):
+  XHR in browsers (async forced; headers loop skipping functions;
+  `withCredentials`; `200` → `done`, else `fail`/reject); native
+  http/https/http2 in Node (`useHTTP2` flag, chunk accumulation);
+  `mockup`/`local` legs run `service.mockup()`/`service.local()` with
+  `{request: null, …}` and no network. Every leg resolves the same
+  `{request, service}` shape.
 - **Cache short-circuit:** cached GET components skip the network entirely via
   `ComplexStorageCache` (`alternate` path); non-GET always hits the network.
 - Rules: custom loaders MUST preserve the `{request, component|service}`
   standard-response shape; MUST NOT switch template transport to `fetch` for
   HTTP(S) (progress/status semantics live on the `xhr`); services MUST define
-  `fail()` whenever non-200 is a reachable outcome.
+  `fail()` whenever non-200 is a reachable outcome; test doubles MUST use
+  `kind:"mockup"` (not stub URLs) so tests never touch the network.
 
 ## Smart widgets (normative)
 
