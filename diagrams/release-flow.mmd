@@ -1,0 +1,5 @@
+flowchart LR
+    F[feature/*] --> D[development]
+    D --> M[main]
+    M --> T[tag vX.Y.Z -suffix]
+    T --> N[npm dist-tag<br/>latest · beta · lts]

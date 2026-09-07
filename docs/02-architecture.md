@@ -128,9 +128,12 @@ Source: `src/BackendMicroservice.ts`, pinned at
 `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/BackendMicroservice.ts`.
 
 - **Construction:** `New(MicroserviceClass, {domain, basePath, body, stream, request})`;
-  the constructor stores all five, defaults `body` to `null`, runs `cors()`,
+  the constructor stores those five, defaults `body` to `null`, runs `cors()`,
   and wires dispatch. `stream`/`request`/`route`/`headers` stay available as
-  instance fields for the whole call.
+  instance fields for the whole call. NOTE: `cors()` runs unconditionally and
+  dereferences `this.route` — `route` is NOT a constructor param, so the harness
+  MUST set it (at minimum `responseHeaders`, plus `cors` for browser routes)
+  or construction throws `TypeError`.
 - **Verb dispatch:** stream `"data"` events route to `post(data)`; all other
   request methods dispatch to same-named methods — `get`, `head`, `put`,
   `delete`, `connect`, `options`, `trace`, `patch`. Override exactly the verbs
@@ -144,8 +147,10 @@ Source: `src/BackendMicroservice.ts`, pinned at
   `allow_methods` (default `GET, OPTIONS, POST`); `allow_headers` (default `*`).
   With no `route.cors` at all, validation is skipped (log only) — routes that
   need browsers MUST declare `cors`.
-- The `com.qcobjects.backend.microservice.static` built-in serves
+- The `com.qcobjects.backend.microservice.static` route name serves
   `redirect_to` file targets — use it for static routes instead of custom code.
+  (It is a route RECORD written by the CLI's `defaultsettings.ts`, not a class
+  in core — no such package exists in core `src/`.)
 
 ## Secret-hiding proxy pattern (normative, reference: `qcobjects-openai-api`)
 

@@ -21,8 +21,8 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
   component, one backend route call, offline shell (service worker), and
   one form with validation.
 - Template `config.json` MUST use `$ENV(...)` for every secret/host and
-  `$config(...)` for derived paths; a committed `.env.example` MUST document
-  each variable.
+  `$config(...)` for derived paths; a committed `.env.example` SHOULD document
+  each variable (the canonical template does not ship one — add it per app).
 - CLI `src/templates/pwa` is the minimal shell; `src/templates/apps` are
   fuller starters. Both MUST track the [06-app-structure](./06-app-structure.md)
   layout; any layout change MUST update templates in the same release.
@@ -43,7 +43,7 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
 | `qcobjectsnewapp` (`v2.4.40-ts`) | `--pwa` / default | `QuickCorp/qcobjects-new-app` (public) | Reference PWA starter + integration testbed (`demo-tests/`) | stable, canonical |
 | `qcobjects-ecommerce-amp` (`v0.0.7`) | `--amp` | private GitLab | AMP storefront starter | stable |
 | `qcobjectsnewphp` (`v1.0.35`) | `--php` | private GitLab | PHP-backend PWA starter | stable |
-| CLI `src/templates/pwa` + `src/templates/apps` | built-in | `qcobjects-cli` repo | Minimal embedded shell (`sw.js`, `spa-local.*`) — fallback when npm is unreachable | stable |
+| CLI `src/templates/pwa` + `src/templates/apps` | built-in | `qcobjects-cli` repo | Minimal embedded assets (`sw.js` for `generate-sw`, `spa-local.*`, cert helpers) — NOT a `create` fallback (`create` always `npm i`s the template package) | stable |
 | `create-qcobjects` (`v2.0.13`) | `npx` initializer | `QCObjects/create-qcobjects` (private) | Standalone creation tool | stable |
 | any npm package | `--custom <name>` | author-provided | Custom layouts per [05-cli](./05-cli.md) § Custom templates | stable mechanism |
 | `QCObjects-App-Templates/*` boilerplates | `--custom <name>` | `QCObjects-App-Templates` org (public): `qcobjects-swipper-template` (swiper/slider showcase), `qcobjects-boilerplate-{pwa,tailwind,tabs-spa,dashboard,hello-world}-template` (all `v1.0.0`) | Minimal starters by concern | stable, convention-compliant |
@@ -97,10 +97,13 @@ The framework is CSS-agnostic: it ships plain CSS (SDK `src/css`, template
 
 ## Configuration precedence (normative, from template README + CONFIG.md)
 
-1. Open `config.json` (or `config.yaml`/`config.yml`).
-2. If JSON **and** YAML both present → **YAML wins, JSON dismissed**.
-3. Field meanings per `CONFIG.md` (migrated in full to [12-schemas](./12-schemas.md)):
-   General (`devmode`: info|debug|warn|error; `autodiscover[_commands|_handlers]`;
+1. Open `config.json`. (The template also ships an identical `config.yaml`, but
+   the CLI runtime parses ONLY `config.json` — YAML is inert until a YAML
+   loader lands. Do not rely on YAML-wins.)
+2. Field meanings per `CONFIG.md` (migrated in full to [12-schemas](./12-schemas.md)):
+   General (`devmode`: info|debug|warn|error; `autodiscover[_libs|_commands|_handlers]`;
+   `domain` (default `$ENV(DOMAIN,localhost)`); `certificate_provider` (default
+   `$ENV(CERTIFICATE_PROVIDER,self_signed)`); `useTemplate` (SSR gate, default false);
    `documentRoot` e.g. `"$config(projectPath)public/"`; `documentRootFileIndex`;
    `cacheControl`; `relativeImportPath`; `serverPortHTTP/HTTPS`; `useLocalSDK`;
    `useLegacyHTTP`; `private-key-pem`/`private-cert-pem` e.g.

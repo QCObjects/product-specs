@@ -42,7 +42,7 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 | Backend routes + `BackendMicroservice` | ✅ | — | ✅ | ✅ | stable |
 | SSR via FileDispatcher (`useTemplate`) | — | — | ✅ | ✅ | stable |
 | PHP handler bridge | — | — | ✅ | — | beta |
-| Deno support (`mod.ts`) | ✅ core | — | ✅ | — | beta |
+| Deno support | — | — | ✅ (`deno.json` + `mod.ts` in CLI) | — | beta (no `mod.ts` entry point ships in core at `v2.5.142`) |
 | MIT license line | — | — | — | — | planned (P1) |
 | Bun server adapter | — | — | — | — | planned (P2 SAL) |
 | Wasm handler (Rust/AssemblyScript) | — | — | — | — | planned (P3) |
@@ -67,7 +67,9 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 - **Demos:** `newapp.qcobjects.dev` (PWA) + Foundation/Materialize/raw-CSS samples.
 - **Desktop (Electron):** same `src/` tree in a shell trio (`main.js` with
   `nodeIntegration:true` + `preload.js` + `renderer.js`, `package.json`
-  `"main": "main.js"`, `electron` dep); publish via `qcobjects publish electron`.
+  `"main": "main.js"`, `electron` dep); publish via the template's
+  `npm run publish:electron` script (a wrapper — the CLI has no native
+  `electron` publish target).
 - **Hybrid mobile (PhoneGap/Cordova):** `res/` icons + `.pgbomit`, same web tree.
 
 ## Rules (normative)
