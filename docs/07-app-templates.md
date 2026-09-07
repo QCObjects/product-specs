@@ -51,7 +51,9 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
   in their release PR and MUST satisfy the Template contract above.
 - Private-source templates MUST still publish versioned npm tarballs so
   `create` works without repo access; their sources MAY stay private.
-- `--custom` names SHOULD use the `qcobjects-template-*` prefix.
+- `--custom` names MUST use the `-template` suffix convention
+  (`qcobjects-<name>-template`, kind infixes preserved:
+  `qcobjects-handler-<name>-template`, etc. — see [05-cli](./05-cli.md)).
 
 ## CSS framework interoperability (normative)
 
