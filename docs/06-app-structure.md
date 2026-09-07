@@ -98,6 +98,28 @@ Netlify one-click deploy supported; live demo at `https://newapp.qcobjects.dev`;
 Docker: `docker run -p 8080:8080 -p 8443:8443 qcobjects/qcobjects-newapp`
 → `https://127.0.0.1:8443/`.
 
+## Electron desktop shell (normative, references: `qcobjects-electron` line)
+
+Desktop apps wrap the same web tree in an Electron shell — three files at the
+app root plus packaging metadata:
+
+- **`main.js` (required):** creates `BrowserWindow` (800×600 baseline),
+  `webPreferences: {nodeIntegration: true, preload: <preload.js>}`,
+  `loadFile('index.html')`, macOS `window-all-closed`/`activate` lifecycle.
+  `nodeIntegration:true` is REQUIRED — it enables QCObjects features in the
+  window (notably `file:` template loading through the `fetch` path, see
+  [03-core-framework](./03-core-framework.md) § Loading transport).
+  `require('qcobjects')` in the main process.
+- **`preload.js` (required):** `require('qcobjects')` in the preload
+  (Chrome-extension-equivalent sandbox); debug logger enablement.
+- **`renderer.js`:** stock Electron renderer stub (no Node APIs; bridge via preload).
+- **`package.json`:** `"main": "main.js"`, `"start": "electron ."`, `electron`
+  dependency (reference pins v8 line — use a maintained Electron on new apps).
+  Publish via `qcobjects publish electron` / `publish:electron` script.
+- The SAME `src/` tree (components, templates, PWA assets) ships inside the
+  shell — no app-code fork between web and desktop; only the shell trio +
+  packaging differ.
+
 ## Verification
 
 - `npm run build` from clean checkout reproduces `public/` byte-equivalent config.
