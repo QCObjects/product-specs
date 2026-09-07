@@ -17,21 +17,47 @@ Sources in `src/ts/org.qcobjects.*.ts`, templates in `src/templates`.
 
 ## Install & load (normative)
 
-- `npm install qcobjects-sdk@v2.4` (line as documented; pin per release).
-- Straight HTML: `https://cdnjs.cloudflare.com/ajax/libs/qcobjects/2.4.20/QCObjects.js`.
-- NOTE (binding): the SDK dependency ships inside the QCObjects runtime by
-  default — install separately only when default paths fail.
+- `npm install qcobjects-sdk@v2.5.105` (pin per release).
+- Straight HTML: the SDK browser bundle (`QCObjects-SDK` bundle /
+  `public/browser/index.js`), not the core `QCObjects.js` CDN file.
+- NOTE (binding): the SDK is NOT bundled inside the core runtime — with
+  `useSDK:true` (core default) it is auto-loaded from `remoteSDKPath`
+  (`https://sdk.qcobjects.dev/`) in browsers, or `require("qcobjects-sdk")`
+  from `node_modules` in Node. Install separately only when default paths fail.
 - The SDK MUST depend on `qcobjects` core and MUST NOT depend on
   `qcobjects-cli` or any server code.
+
+## Package namespaces (normative — ClassFactory/Import MUST use these exact names)
+
+- `org.qcobjects.form.components`: `ShadowedComponent`, `ButtonField`,
+  `InputField`, `TextField`, `EmailField`, `ModalEnclosureComponent`,
+  `ModalComponent`, `SwaggerUIComponent`.
+- `org.qcobjects.base.components`: `FormField`.
+- `org.qcobjects.components.grid`: `GridItemComponent`, `GridComponent`.
+- `org.qcobjects.components.list`: `ListItemComponent`, `ListComponent`.
+- `org.qcobjects.components.slider`: `SlideListComponent`, `SlideItemComponent`,
+  `SliderComponent`.
+- `org.qcobjects.components.splashscreen`: `VideoSplashScreenComponent`,
+  `CubeSplashScreenComponent`; `org.qcobjects.components.base`:
+  `SplashScreenComponent`.
+- `org.qcobjects.controllers`, `.grid`, `.list`, `.slider`, `.form`,
+  `.swagger`, `org.qcobjects.modal.controllers`: as named per file.
+- `org.qcobjects.modal.effects`: `ModalFade`, `ModalMoveDown`, `ModalMoveUp`
+  (a registered package — importable via ClassFactory).
+- There is NO `Package("org.qcobjects.components")` — bare `ClassFactory` /
+  `Import` on that name fails.
 
 ## Module export table (normative)
 
 The SDK MUST export, at minimum (CJS + ESM + browser + types):
-`controllers`, `controllers.grid|slider|form|list|swagger`, `views`,
+`controllers`, `controllers.grid|slider|form|swagger`, `views`,
 `components`, `components.grid|list|slider|splashscreen|notifications`,
 `modal.controllers`, `effects`, `tools.canvas|layouts`,
 `i18n_messages`, `models`, `cloud.auth.session.usertoken|data`, and the
 `QCObjects-SDK` bundle.
+(Gap on record: `org.qcobjects.controllers.list` exists in `src/` but has NO
+`./js/org.qcobjects.controllers.list` subpath export in `package.json` —
+`ListController` resolves via ClassFactory/package, not via deep import.)
 
 ## Components catalogue
 
@@ -47,9 +73,10 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
 - **ButtonField** (`<button>` body) / **InputField** (`<input>` body) /
   **TextField** (`<textarea>` body) / **EmailField** (`<input>` body) — all
   FormField sub-definitions, same usage with their tag default body.
-- **GridComponent** (reserved name `"grid"`) + **GridController** → CSS grid;
-  `rows`/`cols` attrs; subcomponents recommended as cells; provide
-  `grid.tpl.html` (`<p>Loading grid...</p>`).
+- **GridComponent** (reserved name `"grid"`, inline `<p>Loading...</p>`
+  template) forces `controllerClass="DataGridController"` in its constructor —
+  pair it with `DataGridController`, not `GridController` (the CSS-only
+  variant); `rows`/`cols` attrs; subcomponents recommended as cells.
 - **GridItemComponent** (name `"grid-item"`, shadowed, inline template
   `<img src="{{image}}"/><p>{{description}}</p>`) — the default cell used when
   a grid-like controller needs a `subcomponentClass` and none is given.
@@ -67,15 +94,17 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
   ModalController).
 - **SwaggerUIComponent** (+ SwaggerUIController) — injects Swagger-UI DOM.
 - **VideoSplashScreenComponent** — video splash: first tag in the document,
-  `data-background`, `data-video_mp4|_webm|_ogg`, `duration="5000"`,
+  `data-background`, `data-video_mp4|_webm|_ogg`, `duration` (example `"5000"`;
+  absent-attribute default is `1000`),
   `<img slot="logo">`; main component follows with `splashscreen` attr
   (`<layout-basic splashscreen name="main" cached=true ...>` in widget syntax).
 - **SplashScreenComponent** — base splash (extended by video + cube variants).
 - **CubeSplashScreenComponent** — 3D spinning-cube splash (shadowed, inline
   template with `spin` keyframes).
 - **NotificationComponent** — notification shell. Drift note: registered under
-  the legacy `org.quickcorp.components.notifications` package — the only SDK
-  module still on the old namespace; rename to `org.qcobjects.*` when touched.
+  the legacy `org.quickcorp.components.notifications` package (the i18n loader
+  also references an `org.quickcorp.*` namespace); rename to `org.qcobjects.*`
+  when touched.
 - Visual assets live under `src/css` + `src/templates`; class logic MUST NOT
   inline large CSS blobs.
 
@@ -83,7 +112,8 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
 
 - **GenericController** — empty `Controller` extension point; extend it (instead
   of raw `Controller`) when a controller needs no built-in behavior yet.
-- **GridController** — with GridComponent (see above).
+- **GridController** — CSS-only grid variant (does NOT pair with
+  `GridComponent`, which forces `DataGridController` — see above).
 - **DataGridController** — maps `data[]` onto `subcomponentClass` instances
   (e.g. profile cards: `CardComponent` template `card.tpl.html` with
   `{{profilePicture}} {{name}} {{email}}`; list shell `loading_list.tpl.html`).
@@ -93,31 +123,40 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
   `currentSlide(n)`, `stop()`; shadow-aware (`shadowRoot` when shadowed, else
   `body`); registers itself globally as `slider_<instanceID>`.
 - **ModalController** — modal behavior.
-- **FormValidations** — `FormValidations.getDefault(name)` default validators.
+- **FormValidations** — instance validators: `(new FormValidations(o)).getDefault()`
+  returns a `(fieldName, dataValue, element)=>bool` checker (name/email regexes
+  or the element's own `pattern` attribute).
 - **FormController** — 3-step forms: (1) `serviceClass` string (resolved via
   ClassFactory, may be fully qualified), (2) `formSettings`
   (`backRouting` on fail / `loadingRouting` while calling / `nextRouting` on OK;
   defaults `'#'` / `'#loading'` / `'#signupsuccessful'`), (3) `validations`
-  (`field(){ return (fieldName, dataValue, element)=>bool }`).
+  — an ARRAY-like keyed per field: `validations[fieldName](fieldName, dataValue,
+  element)`, NOT a `field(){ return fn }` wrapper shape.
   `formSaveTouchHandler` submits on click/touch of any `.submit` element —
-  override to change. Safe-extension pattern: extend `Controller`, keep a
-  `defaulController = new FormController(o)` wired in `_new_(o)`, delegate in
-  `done()` (see README signup example: `SignupClientService extends JSONService`
+  override to change. ⚠️ KNOWN ISSUE: `done()` calls `this.onpress(".submit",…)`
+  but `FormController` overrides `onpress` to `throw new Error("Method not
+  implemented.")` — submitting through `done()` throws until this is fixed;
+  the safe-extension pattern (extend `Controller`, keep a `defaulController =
+  new FormController(o)` wired in `_new_(o)`, delegate in `done()`) is the
+  workaround (see README signup example: `SignupClientService extends JSONService`
   POST + `SignupFormController` + shadowed `signup-form` template with slots).
 - **SwaggerUIController** — with SwaggerUIComponent.
 
 ## Effects catalogue (all `requestAnimationFrame`-based, CSS-smart)
 
-`Move.apply(el,x1,y1,x2,y2)`; `MoveXInFromRight/Left.apply(el)`;
-`MoveYInFromBottom/Top.apply(el)`; `RotateX/Y.apply(el,aFrom,aTo)`,
-`RotateZ`, `Rotate` (3D parallel, degrees 0–360);
-`Fade.apply(el,alphaFrom,alphaTo)` (0–1);
-`Radius.apply(el,rFrom,rTo)`; `Resize.apply(el,sFrom,sTo)` (1 = normal);
-`WipeLeft/Right/Up/Down.apply(el,sFrom,sTo)`.
-Batch via `Tag(...).map(el => (new X()).apply(el, …))`.
+Calling form matters — static-only vs instance-only is per class:
 
-Modal presets (`org.qcobjects.modal.effects`, internal — imported by the
-components module, no separate package export): `ModalFade extends Fade`
+- Static `X.apply(el, …)`: `Move`, `MoveXInFromRight/Left`, `MoveYInFromBottom/Top`,
+  `RotateX`, `RotateY` — `(new Move()).apply` is `undefined` and throws.
+- Both forms: `Fade` only (`Fade.apply(el,aFrom,aTo)` or `(new Fade()).apply(…)`).
+- Instance-only `(new X()).apply(el, …)`: `RotateZ`, `Rotate` (3D parallel,
+  degrees 0–360), `Radius`, `Resize` (1 = normal), `WipeLeft/Right/Up/Down`.
+- Batch via `Tag(...).map(el => X.apply(el, …))` for static classes,
+  `Tag(...).map(el => (new X()).apply(el, …))` for instance classes.
+
+Modal presets (`org.qcobjects.modal.effects` — a REGISTERED package,
+importable via `ClassFactory("org.qcobjects.modal.effects.ModalFade")`;
+only the npm subpath export is absent): `ModalFade extends Fade`
 (500ms), `ModalMoveUp extends Move` (800ms), `ModalMoveDown extends Move` (300ms).
 
 ## Models, cloud session, tools, views, i18n
@@ -141,10 +180,13 @@ Status: `beta` (see [11-features](./11-features.md)) — API shape may still mov
   `_Crypt.encrypt(username+password, userToken)` — the password never travels or
   persists raw; only the derived credential token leaves the client.
 - **Logout:** `closeGlobalSession(username)` clears the token cache, nulls the
-  global slot, and resets `SessionUserToken.user` to `{}`.
+  global slot, and resets `SessionUserToken.user` to `{}`. NOTE:
+  `ComplexStorageCache.clear()` wipes ALL `cachedObject_*` keys — component and
+  service caches go too, not just the token.
 - **Session data** (`SessionData extends InheritClass`): `sessionStorage`-backed,
   keyed `session_<btoa(userToken)>` so each login's data is namespaced by its
-  token (`index(...)` throws unless the usertoken package is imported first).
+  token. (The `index()` missing-import guard is unreachable behind the static
+  import — treat the import as mandatory, not the error.)
   A session container MUST be set first
   (`setSessionContainer(...parts)`; `getSessionContainer()` throws when unset);
   `save(...)` stringifies `sessionData` into the slot, `getSessionData(...)`
@@ -154,7 +196,9 @@ Status: `beta` (see [11-features](./11-features.md)) — API shape may still mov
   re-derived per login, never stored; closing a session MUST clear both the
   token cache and the `sessionStorage` slot.
 - `org.qcobjects.tools.canvas.CanvasTool`, `org.qcobjects.tools.layouts.BasicLayout`.
-- `org.qcobjects.tools.Process extends Timer` — named thread entry.
+- `org.qcobjects.tools.Process extends Timer` — registry-only anonymous class;
+  ⚠️ its `thread()` override throws `Method not implemented`, so `start()`
+  always throws. Do not use until fixed.
 - `org.qcobjects.views.GridView` (generic grid view).
 - `org.qcobjects.i18n_messages.i18n_messages` — subclass per lang
   (`class i18n_messages_es extends i18n_messages` with `messages:[{en,es}…]`),
