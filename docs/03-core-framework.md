@@ -271,17 +271,11 @@ Components and services load over different transports by purpose. Sources:
   `file:`-scheme template URLs use `fetch(url).then(response.text())` when
   `"fetch" in top` (sync-XHR fallback otherwise). This is the local-preview /
   hybrid-app path — same feed pipeline after the text arrives.
-- **Services → one `serviceLoader`, four legs** (dispatch on `service.kind`,
-  then runtime — callers never choose): `rest` + browser → XHR leg (async
-  forced; headers loop skipping functions; `withCredentials`; `200` →
-  `done({request: xhr, service})`, else `fail()` or reject); `rest` + Node →
-  built-in Node leg (`http`/`https` per protocol, `http2` client when
-  `service.useHTTP2`, chunk accumulation, `{http2Client, request, service,
-  responseHeaders}`); `mockup` → `service.mockup(response)` with no network
-  (test doubles); `local` → `service.local(response)` with no network
-  (embedded data); unknown kind → resolved no-op. Standalone
-  `serviceLoaderNode` helpers (e.g. the OpenAI package's native-https one)
-  predate/parallel the built-in Node leg and MUST keep its shape.
+- **Services → one `serviceLoader`.** It dispatches internally on
+  `service.kind` + runtime: XHR in browsers, native http/https/http2 in Node,
+  `mockup`/`local` for test doubles and embedded data (no network). Callers
+  never choose a transport; every leg resolves the same
+  `{request, service}` shape.
 - **Cache short-circuit:** cached GET components skip the network entirely via
   `ComplexStorageCache` (`alternate` path); non-GET always hits the network.
 - Rules: custom loaders MUST preserve the `{request, component|service}`

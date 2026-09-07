@@ -184,43 +184,22 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
 
-## Services: one loader, two runtime roles (normative)
+## Front-end vs back-end services (normative)
 
-Correction on record: an earlier version of this section split services by
-class kind — wrong twice over. `Service`/`JSONService` subclasses are ISOMORPHIC
-(the same class, e.g. `GitHubTagService`, runs unchanged on both runtimes), AND
-there is a single entry point: `serviceLoader(service)` dispatches INTERNALLY.
-Source: `src/serviceLoader.ts`, pinned at
-`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/serviceLoader.ts`.
-
-- **Dispatch is by `service.kind`, then runtime:**
-  - `kind:"rest"` + browser → XHR leg (async, headers loop, `withCredentials`,
-    `done`/`fail` on status).
-  - `kind:"rest"` + Node → built-in Node leg (`http`/`https` per protocol,
-    `http2` client when `service.useHTTP2`, chunk accumulation into
-    `service.template`, `done` with `{http2Client, request, service,
-    responseHeaders}`).
-  - `kind:"mockup"` → calls `service.mockup(response)` (or `done`), no network —
-    the test-double path.
-  - `kind:"local"` → calls `service.local(response)` (or `done`), no network —
-    the embedded-data path.
-  - Unknown kind → resolved no-op + debug line (never throws).
-  Every leg resolves the same `{request, service}` standard-response shape.
-- **The remaining distinction is runtime ROLE, not class kind:**
-  - *Service role* (data access): a `Service` subclass called with data, on
-    either runtime — e.g. `serviceLoader(New(GitHubTagService))` in a controller
-    `done()`, or inside a microservice verb via either loader.
-  - *Microservice role* (request routing): a `Microservice extends
-    BackendMicroservice` dispatched from `backend.routes` by HTTP verb —
-    the homologue of an edge/cloud function, but stronger: verbs live
-    encapsulated in a standard class (construction, inheritance, `cors()`,
-    `done()` protocol) instead of bare request functions.
-- Rules: a service class holding secrets MUST run server-side only (gate on
-  `process.env` presence or keep it out of browser bundles); microservice
-  classes MUST NOT import browser globals (`document`, `window`, `location`);
-  new loaders MUST preserve the `{request, service}` shape; shared DTO shapes
-  SHOULD be documented once (in the route's spec entry) and referenced from
-  both sides.
+- **Front-end service:** a `Service`/`JSONService` subclass consumed in the
+  browser — fetches data over HTTP (XHR leg of `serviceLoader`), binds the
+  response into templates via `{{}}`, and MUST NOT hold secrets (proxy instead).
+- **Back-end service:** a `Microservice extends BackendMicroservice` dispatched
+  from `backend.routes` by HTTP verb — runs in Node, answers with `this.body` +
+  `done()`, and MAY hold keys via `$ENV`/`process.env`. Think edge/cloud
+  function, but encapsulated in a class (verbs, `cors()`, `done()` protocol).
+- **Same classes, either side:** a `Service` subclass is isomorphic — the same
+  code runs in the browser or in Node (`serviceLoader` picks the transport leg
+  internally by `service.kind` + runtime: XHR, Node http/https/http2, `mockup`,
+  or `local`). Classify by WHERE it runs, not by what it extends.
+- The two meet ONLY at HTTP route boundaries (proxy + BFF patterns above).
+  Source: `src/serviceLoader.ts`, pinned at
+  `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/serviceLoader.ts`.
 
 ## Backend routing contract (`config.json`)
 
