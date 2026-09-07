@@ -264,10 +264,17 @@ Components and services load over different transports by purpose. Sources:
   `file:`-scheme template URLs use `fetch(url).then(response.text())` when
   `"fetch" in top` (sync-XHR fallback otherwise). This is the local-preview /
   hybrid-app path — same feed pipeline after the text arrives.
-- **Services → XHR always** (async forced; sync XHR is deprecated): custom
-  `service.headers` applied in a loop (function values skipped),
+- **Services (browser) → XHR always** (async forced; sync XHR is deprecated):
+  custom `service.headers` applied in a loop (function values skipped),
   `withCredentials` honored, status `200` → `done({request: xhr, service})`,
   anything else → `fail({request: xhr, service})` when defined, else reject.
+- **Services (Node) → `serviceLoaderNode`.** Server-side services execute via
+  native `https.request` (method/hostname/path/headers from the service, body =
+  stringified `data`, `maxRedirects: 20`), resolving the SAME
+  `{request, service}` shape (`service.done({request, service})` then resolve;
+  socket error rejects). Reference implementation:
+  `qcobjects-openai-api/src/js/packages/serviceLoaderNode.ts`. Any Node service
+  executor MUST preserve this shape so services run unchanged on both sides.
 - **Cache short-circuit:** cached GET components skip the network entirely via
   `ComplexStorageCache` (`alternate` path); non-GET always hits the network.
 - Rules: custom loaders MUST preserve the `{request, component|service}`

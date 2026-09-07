@@ -147,6 +147,25 @@ Source: `src/BackendMicroservice.ts`, pinned at
 - The `com.qcobjects.backend.microservice.static` built-in serves
   `redirect_to` file targets — use it for static routes instead of custom code.
 
+## Secret-hiding proxy pattern (normative, reference: `qcobjects-openai-api`)
+
+Third-party APIs with secret keys MUST be integrated browser → same-origin
+proxy → vendor, never browser → vendor. The OpenAI/Azure packages prove the shape:
+
+- **Browser side:** a `Service` subclass (`ProxyOpenAIService`) POSTs to a
+  same-origin route (`/api/openai`, `external:false`, `cached:false`), carrying
+  only the model payload (`model`, `messages`, `temperature`) — NO key, NO
+  `Authorization` header.
+- **Server side:** a `BackendMicroservice.post()` builds the vendor client
+  service (key from `CONFIG.get("OPENAI_API_KEY")`, i.e. `$ENV(...)` resolved
+  only in Node), executes it via `serviceLoaderNode`, sets `this.body` to the
+  vendor response, and `done()`s. Errors become `this.body` + `done()` (fail
+  closed with a body, not a stream write).
+- **Rules:** vendor keys MUST live only in server-side `$ENV` settings;
+  browser code MUST NOT contain, import, or receive keys; proxy routes SHOULD
+  keep `cached:false`; streaming/SSE responses are NOT covered by this pattern
+  (request/response JSON only — verify before promising streams).
+
 ## Backend routing contract (`config.json`)
 
 - Every route REQUIRES `path` + `microservice` (package string as indexing point).
