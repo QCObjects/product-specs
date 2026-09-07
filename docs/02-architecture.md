@@ -184,37 +184,43 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
 
-## Services: unified syntax, two runtime roles (normative)
+## Services: one loader, two runtime roles (normative)
 
 Correction on record: an earlier version of this section split services by
-class kind — wrong. `Service`/`JSONService` subclasses are ISOMORPHIC: the same
-class loads unchanged via `serviceLoader` (browser XHR) or `serviceLoaderNode`
-(Node https) — e.g. a `GitHubTagService extends JSONService` keeps its
-`name/url/method/headers/done()` identical on both sides. Same for components:
-one class, `componentLoader` front or back. The distinction is runtime ROLE,
-not class kind:
+class kind — wrong twice over. `Service`/`JSONService` subclasses are ISOMORPHIC
+(the same class, e.g. `GitHubTagService`, runs unchanged on both runtimes), AND
+there is a single entry point: `serviceLoader(service)` dispatches INTERNALLY.
+Source: `src/serviceLoader.ts`, pinned at
+`https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/serviceLoader.ts`.
 
-| | Service role (data access) | Microservice role (request routing) |
-|---|---|---|
-| Class kind | `Service`/`JSONService` subclass (either side) | `Microservice extends BackendMicroservice` in a route package |
-| Trigger | Called with data (`serviceLoader` / `serviceLoaderNode`) | HTTP verb dispatched from `backend.routes` |
-| Input | `service.data` (bound params) | Request stream data / route params |
-| Output | `service.template` (+ `JSONresponse`), `done`/`fail` | `this.body` + `done()` |
-| Secrets | None in browser; `$ENV`/`process.env` when run server-side | Server-side `$ENV`/`process.env` |
-| UI binding | `{{}}` templates (browser) or reshaped `body` (server) | Never touches DOM — returns data/envelopes |
-
-- `BackendMicroservice` is the homologue of an edge/cloud function — but
-  stronger: the verb handlers (`get/post/put/…`) live encapsulated in a
-  standard class (construction, inheritance, `cors()`, `done()` protocol)
-  instead of bare request functions.
-- The two roles meet at HTTP route boundaries (proxy + BFF patterns above)
-  sharing the `{request, service|component}` standard-response shape —
-  see [03-core-framework](./03-core-framework.md) §§ Services, Loading transport.
+- **Dispatch is by `service.kind`, then runtime:**
+  - `kind:"rest"` + browser → XHR leg (async, headers loop, `withCredentials`,
+    `done`/`fail` on status).
+  - `kind:"rest"` + Node → built-in Node leg (`http`/`https` per protocol,
+    `http2` client when `service.useHTTP2`, chunk accumulation into
+    `service.template`, `done` with `{http2Client, request, service,
+    responseHeaders}`).
+  - `kind:"mockup"` → calls `service.mockup(response)` (or `done`), no network —
+    the test-double path.
+  - `kind:"local"` → calls `service.local(response)` (or `done`), no network —
+    the embedded-data path.
+  - Unknown kind → resolved no-op + debug line (never throws).
+  Every leg resolves the same `{request, service}` standard-response shape.
+- **The remaining distinction is runtime ROLE, not class kind:**
+  - *Service role* (data access): a `Service` subclass called with data, on
+    either runtime — e.g. `serviceLoader(New(GitHubTagService))` in a controller
+    `done()`, or inside a microservice verb via either loader.
+  - *Microservice role* (request routing): a `Microservice extends
+    BackendMicroservice` dispatched from `backend.routes` by HTTP verb —
+    the homologue of an edge/cloud function, but stronger: verbs live
+    encapsulated in a standard class (construction, inheritance, `cors()`,
+    `done()` protocol) instead of bare request functions.
 - Rules: a service class holding secrets MUST run server-side only (gate on
   `process.env` presence or keep it out of browser bundles); microservice
   classes MUST NOT import browser globals (`document`, `window`, `location`);
-  shared DTO shapes SHOULD be documented once (in the route's spec entry) and
-  referenced from both sides.
+  new loaders MUST preserve the `{request, service}` shape; shared DTO shapes
+  SHOULD be documented once (in the route's spec entry) and referenced from
+  both sides.
 
 ## Backend routing contract (`config.json`)
 
