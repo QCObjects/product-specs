@@ -297,16 +297,20 @@ Components and services load over different transports by purpose. Sources:
   `rest` + browser → XHR (async forced; headers loop skipping functions;
   `withCredentials`; `200` → `done`, else `fail()` when defined — WARNING: with
   no `fail()` method the promise NEVER settles, it does not reject);
-  `rest` + Node → built-in http/https/http2 leg; `mockup`/`local` → no-network
-  `service.mockup()`/`service.local()`; unknown kind → resolved no-op.
+  `rest` + Node → built-in http/https/http2 leg (`useHTTP2` flag, chunk
+  accumulation); `mockup`/`local` → no-network `service.mockup()`/
+  `service.local()` with `{request: null, …}`; unknown kind → resolved no-op.
   Standalone `serviceLoaderNode` helpers (e.g. the OpenAI package's
   native-https one) parallel the built-in Node leg and MUST keep its shape.
+  Test doubles MUST use `kind:"mockup"` (not stub URLs) so tests never touch
+  the network.
 - **Cache short-circuit:** cached GET components skip the network entirely via
   `ComplexStorageCache` (`alternate` path); non-GET always hits the network.
 - Rules: custom loaders MUST preserve the `{request, component|service}`
   standard-response shape; MUST NOT switch template transport to `fetch` for
   HTTP(S) (progress/status semantics live on the `xhr`); services MUST define
-  `fail()` whenever non-200 is a reachable outcome.
+  `fail()` whenever non-200 is a reachable outcome; test doubles MUST use
+  `kind:"mockup"` (not stub URLs) so tests never touch the network.
 
 ## Smart widgets (normative)
 
@@ -492,6 +496,44 @@ in `src/tag_filter.ts`).
 - Custom effects extend `Effect` and override `apply`, delegating via
   `_super_('Fade','apply').apply(this,arguments)`; engine runs on
   `requestAnimationFrame` and mutates CSS smartly.
+
+## Transition effects + `apply-effect-to` (normative)
+
+Sources: `src/TransitionEffect.ts`, `src/Component.ts`
+(`createEffectInstance`, `applyTransitionEffect`, `applyObserveTransitionEffect`),
+pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/TransitionEffect.ts`.
+
+- **Declaration:** `effectClass="<TransitionEffect subclass>"` on the component
+  tag/body + `apply-effect-to="<mode>"` (absent = `"load"`). Only two modes exist:
+  `load` (apply immediately at build) and `observe` (apply on first visibility).
+  Any other value applies nothing.
+- **`load` path** (`applyTransitionEffect`): resolves `effectClass` via
+  `ClassFactory` (unknown name throws), requires a `TransitionEffect` subclass
+  (anything else logs and skips), instantiates `New(Effect,{component})`, and
+  calls `.apply(defaultParams)`.
+- **`observe` path** (`applyObserveTransitionEffect`): watches
+  `componentRoot` (`shadowRoot` when shadowed, else `body`) with an
+  `IntersectionObserver`; on first intersect it applies once and unobserves.
+  Without `IntersectionObserver`, it applies immediately (same as `load`).
+  Browser-only.
+- **`TransitionEffect` mechanics** (package
+  `com.qcobjects.effects.transitions.base`): `effects[]` lists effect class
+  names applied in order, each resolved via `ClassFactory` and invoked with the
+  full param set (`alphaFrom/To`, `angleFrom/To`, `radiusFrom/To`,
+  `scaleFrom/To`) — defaults `alpha 0→1`, `angle 180→0`, `radius 0→30`,
+  `scale 0→1`, `duration` 385. `fitToHeight`/`fitToWidth` size the root from
+  its `offsetParent`/bounding rect first; the root (or shadow host) is forced
+  `display:block` before effects run.
+- **Canonical example** (view transitions):
+  `Class("MainTransitionEffect",TransitionEffect,{duration:2500,
+  defaultParams:{alphaFrom:0, alphaTo:1}, effects:["Fade","MoveXInFromRight"],
+  fitToHeight:true})` + `effectClass="MainTransitionEffect"
+  apply-effect-to="observe"` — fade+slide-in the first time each view scrolls
+  into view.
+- Rules: effect names in `effects[]` MUST all resolve (one typo skips nothing —
+  resolution throws); `observe` SHOULD be preferred for below-fold content,
+  `load` for above-fold entrances; custom transitions MUST extend
+  `TransitionEffect` (not raw `Effect`) to participate in this protocol.
 - `Timer.thread({duration, timing(fraction,elapsed), intervalInterceptor(progress)})`
   emulates threads (modern browsers only).
 - `_Crypt`: `New(_Crypt,{string,key})._encrypt()/._decrypt()`, or static
