@@ -151,6 +151,25 @@ app root plus packaging metadata:
   shell — no app-code fork between web and desktop; only the shell trio +
   packaging differ.
 
+## Hybrid packaging — PhoneGap/Cordova (normative, reference: `qcobjects-phonegap-app`)
+
+Hybrid apps ship the same web tree inside a Cordova shell:
+
+- **`config.xml` (required):** widget descriptor — `id` (reverse-DNS app id),
+  `version`, `<content src="index.html"/>`, per-`platform` icons and splash
+  screens (android densities + iOS sizes), preferences
+  (e.g. `DisallowOverscroll`, `android-minSdkVersion`).
+- **`www/` tree:** mirrors the web `src/` tree (css, js, templates, assets) as
+  the device web root; `platforms/` (per-OS Cordova build code) and `plugins/`
+  (vendored `cordova-plugin-*` with `plugin.xml`) are generated/vendored
+  alongside — never hand-edit generated platform code.
+- **Boot:** wait for the `deviceready` event before QCObjects init (Cordova APIs
+  don't exist before it). The framework detects the shell via
+  `is_phonegap = typeof cordova !== "undefined"` (`src/platform.ts`) and adapts
+  transport accordingly (no `Content-Type` header on XHR — see
+  [03-core-framework](./03-core-framework.md) § Loading transport).
+- `res/` icons + `.pgbomit` mark PhoneGap-Build assets, as in the base layout.
+
 ## Verification
 
 - `npm run build` from clean checkout reproduces `public/` byte-equivalent config.
