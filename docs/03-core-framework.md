@@ -291,17 +291,16 @@ Components and services load over different transports by purpose. Sources:
   `file:`-scheme template URLs use `fetch(url).then(response.text())` when
   `"fetch" in top` (sync-XHR fallback otherwise). This is the local-preview /
   hybrid-app path — same feed pipeline after the text arrives.
-- **Services (browser) → XHR always** (async forced; sync XHR is deprecated):
-  custom `service.headers` applied in a loop (function values skipped),
-  `withCredentials` honored, status `200` → `done({request: xhr, service})`,
-  anything else → `fail({request: xhr, service})` when defined, else reject.
-- **Services (Node) → `serviceLoaderNode`.** Server-side services execute via
-  native `https.request` (method/hostname/path/headers from the service, body =
-  stringified `data`, `maxRedirects: 20`), resolving the SAME
-  `{request, service}` shape (`service.done({request, service})` then resolve;
-  socket error rejects). Reference implementation:
-  `qcobjects-openai-api/src/js/packages/serviceLoaderNode.ts`. Any Node service
-  executor MUST preserve this shape so services run unchanged on both sides.
+- **Services → one `serviceLoader`, four legs** (dispatch on `service.kind`,
+  then runtime — callers never choose; full detail in
+  [02-architecture](./02-architecture.md) § `serviceLoader` dispatch detail):
+  `rest` + browser → XHR (async forced; headers loop skipping functions;
+  `withCredentials`; `200` → `done`, else `fail()` when defined — WARNING: with
+  no `fail()` method the promise NEVER settles, it does not reject);
+  `rest` + Node → built-in http/https/http2 leg; `mockup`/`local` → no-network
+  `service.mockup()`/`service.local()`; unknown kind → resolved no-op.
+  Standalone `serviceLoaderNode` helpers (e.g. the OpenAI package's
+  native-https one) parallel the built-in Node leg and MUST keep its shape.
 - **Cache short-circuit:** cached GET components skip the network entirely via
   `ComplexStorageCache` (`alternate` path); non-GET always hits the network.
 - Rules: custom loaders MUST preserve the `{request, component|service}`
