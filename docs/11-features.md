@@ -65,6 +65,10 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
 - **Cloud:** DigitalOcean 1-Click Droplet; AWS AMI + PIB (Marketplace listing).
 - **Editors:** Atom `qcobjects-syntax`; VS Code `Quickcorp.QCObjects-vscode`.
 - **Demos:** `newapp.qcobjects.dev` (PWA) + Foundation/Materialize/raw-CSS samples.
+- **Desktop (Electron):** same `src/` tree in a shell trio (`main.js` with
+  `nodeIntegration:true` + `preload.js` + `renderer.js`, `package.json`
+  `"main": "main.js"`, `electron` dep); publish via `qcobjects publish electron`.
+- **Hybrid mobile (PhoneGap/Cordova):** `res/` icons + `.pgbomit`, same web tree.
 
 ## Rules (normative)
 
