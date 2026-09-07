@@ -358,6 +358,16 @@ routing is recursive down the Nested Components Stack. Sources:
   their default template unconditionally.
 - New routable components MUST declare explicit `path`s (no catch-all reliance)
   and MUST list valid `routingWay`s they support.
+- **Custom routing management (escape hatch):** canonical routing above covers
+  standard cases, but a component class MAY implement its own routing entirely —
+  reference `example2-routing.html`: a `RoutingComponent` builds `routings` from
+  `<routing>` nodes in `_new_`, overrides `_reroute_()` (exact-match on
+  `document.location[routingWay]`, template switch, body clear + `rebuild()`),
+  exposes `route()` sweeping `GLOBAL.componentsStack` by `__classType`, and is
+  driven by a `popstate` listener. Custom routers MUST reuse the `<routing>`
+  declaration shape and the `routingSelected`/`templateURI`/`rebuild()` protocol
+  above so nested children keep working; custom matching semantics MUST be
+  documented on the class.
 
 ## Template handlers (normative)
 
