@@ -216,6 +216,13 @@ Rules: custom meta processors register via `Processor.setProcessor(fn)` with
 non-arrow functions (`this` is the handler); names MUST be alphanumeric;
 processors MUST be pure string transforms (no DOM writes — return markup);
 templates SHOULD prefer `$component`/`$mapper` over hand-concatenated tags.
+Multi-arg form is supported — args arrive positionally after the component
+instance (production proof: `$MAILCHIMP_API(KEY,SERVER,KEY_LIST)` joins three
+env vars with `-`, registered inside the mailchimp lib package itself).
+**Processors travel with packages:** an add-on that needs custom placeholders
+MUST register them in its own module (lib/handler entry), never ask the app to
+register them — the mailchimp lib's `api/*.js` registering `MAILCHIMP_API` at
+import time is the canonical pattern.
 
 ## Component model (normative)
 
@@ -264,10 +271,17 @@ Components and services load over different transports by purpose. Sources:
   `file:`-scheme template URLs use `fetch(url).then(response.text())` when
   `"fetch" in top` (sync-XHR fallback otherwise). This is the local-preview /
   hybrid-app path — same feed pipeline after the text arrives.
-- **Services → XHR always** (async forced; sync XHR is deprecated): custom
-  `service.headers` applied in a loop (function values skipped),
+- **Services (browser) → XHR always** (async forced; sync XHR is deprecated):
+  custom `service.headers` applied in a loop (function values skipped),
   `withCredentials` honored, status `200` → `done({request: xhr, service})`,
   anything else → `fail({request: xhr, service})` when defined, else reject.
+- **Services (Node) → `serviceLoaderNode`.** Server-side services execute via
+  native `https.request` (method/hostname/path/headers from the service, body =
+  stringified `data`, `maxRedirects: 20`), resolving the SAME
+  `{request, service}` shape (`service.done({request, service})` then resolve;
+  socket error rejects). Reference implementation:
+  `qcobjects-openai-api/src/js/packages/serviceLoaderNode.ts`. Any Node service
+  executor MUST preserve this shape so services run unchanged on both sides.
 - **Cache short-circuit:** cached GET components skip the network entirely via
   `ComplexStorageCache` (`alternate` path); non-GET always hits the network.
 - Rules: custom loaders MUST preserve the `{request, component|service}`
@@ -430,6 +444,17 @@ in `src/tag_filter.ts`).
   for `template source … is default|inline`, `type for … is Component`
   (base-class fallback), `LOADING COMPONENT DATA`, and `Something wrong loading
   the component`.
+- **Third-party lib integration (reference: QR scanner app):** vendor the lib
+  under `js/packages/thirdparty/libs/<lib>/` (with its LICENSE), then chain-load
+  it from the controller via `loadDependencies(callback)`:
+  `CONFIG.get("<lib>-path", "<vendored default>")` locates the base,
+  `CONFIG.get("<lib>-external", false)` flips vendored vs CDN, and nested
+  `New(SourceJS,{url, external, done})` pushes ordered dependencies (worker
+  before lib), calling back when ready. Query live DOM through
+  `component.shadowRoot.subelements(selector)` (`subelements` works on
+  `ShadowRoot` directly). Headless `New(Component,{templateURI:"", body: el,
+  tplsource:"none"})` MAY wrap raw elements as throwaway component instances
+  for framework-flavored DOM utilities.
 
 ## Effects, Timer, codecs (normative)
 
