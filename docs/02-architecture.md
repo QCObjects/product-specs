@@ -184,30 +184,37 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
 
-## Front-end vs back-end services (normative)
+## Services: unified syntax, two runtime roles (normative)
 
-Two different classes, two runtimes, one contract shape:
+Correction on record: an earlier version of this section split services by
+class kind — wrong. `Service`/`JSONService` subclasses are ISOMORPHIC: the same
+class loads unchanged via `serviceLoader` (browser XHR) or `serviceLoaderNode`
+(Node https) — e.g. a `GitHubTagService extends JSONService` keeps its
+`name/url/method/headers/done()` identical on both sides. Same for components:
+one class, `componentLoader` front or back. The distinction is runtime ROLE,
+not class kind:
 
-| | Front-end (`Service`/`JSONService`) | Back-end (`BackendMicroservice`) |
+| | Service role (data access) | Microservice role (request routing) |
 |---|---|---|
-| Where it runs | Browser, via XHR `serviceLoader` (or Node via `serviceLoaderNode`) | CLI server, dispatched from `backend.routes` |
-| Definition | `Class('X',Service\|JSONService,{name,url,method,…})` | `Class('Microservice',BackendMicroservice,{get/post/…})` in a route package |
-| Trigger | Component/controller calls `serviceLoader(New(X))` | HTTP verb on the route path |
+| Class kind | `Service`/`JSONService` subclass (either side) | `Microservice extends BackendMicroservice` in a route package |
+| Trigger | Called with data (`serviceLoader` / `serviceLoaderNode`) | HTTP verb dispatched from `backend.routes` |
 | Input | `service.data` (bound params) | Request stream data / route params |
-| Output | `service.template` + `JSONresponse`, `done`/`fail` | `this.body` + `done()` |
-| Secrets | MUST NOT hold keys (proxy instead) | MAY hold keys via `$ENV`/`process.env` |
-| Response as UI | Binds `{{}}` into templates directly | Never touches DOM — returns data/envelopes |
+| Output | `service.template` (+ `JSONresponse`), `done`/`fail` | `this.body` + `done()` |
+| Secrets | None in browser; `$ENV`/`process.env` when run server-side | Server-side `$ENV`/`process.env` |
+| UI binding | `{{}}` templates (browser) or reshaped `body` (server) | Never touches DOM — returns data/envelopes |
 
-- The two sides meet ONLY at HTTP route boundaries (proxy + BFF patterns
-  above) sharing the `{request, service|component}` standard-response shape —
+- `BackendMicroservice` is the homologue of an edge/cloud function — but
+  stronger: the verb handlers (`get/post/put/…`) live encapsulated in a
+  standard class (construction, inheritance, `cors()`, `done()` protocol)
+  instead of bare request functions.
+- The two roles meet at HTTP route boundaries (proxy + BFF patterns above)
+  sharing the `{request, service|component}` standard-response shape —
   see [03-core-framework](./03-core-framework.md) §§ Services, Loading transport.
-- A `Service` subclass executed via `serviceLoaderNode` inside a microservice
-  verb method is still a FRONT-end class reused server-side (Printful proof) —
-  classify by definition site, not execution site.
-- Rules: front-end services MUST NOT embed secrets or absolute vendor URLs
-  (same-origin proxy paths only); back-end services MUST NOT import browser
-  globals (`document`, `window`, `location`); shared DTO shapes SHOULD be
-  documented once (in the route's spec entry) and referenced from both sides.
+- Rules: a service class holding secrets MUST run server-side only (gate on
+  `process.env` presence or keep it out of browser bundles); microservice
+  classes MUST NOT import browser globals (`document`, `window`, `location`);
+  shared DTO shapes SHOULD be documented once (in the route's spec entry) and
+  referenced from both sides.
 
 ## Backend routing contract (`config.json`)
 
