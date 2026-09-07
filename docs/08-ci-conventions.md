@@ -42,6 +42,10 @@ else npm publish; fi
 - PRs to `main` MUST originate from `development` (workflow-enforced). PRs to
   `development` SHOULD reference affected spec files. Protected branches MUST
   require CI green before merge.
+- **Containerized tests:** repos MAY run the suite in Docker via a compose
+  `sut` service (`build: .`, `command: npm test` — reference: web-dev site
+  repo). Compose-run and runner-run results MUST agree; on disagreement the
+  compose run governs (it matches production).
 
 ## Version-tag interplay (normative)
 
