@@ -19,10 +19,12 @@ npm `scripts` in core, SDK, CLI, and templates.
   `postbuild` (`postbuild.js`).
 - cli: `build:ts-types` (`transpile.js tsconfig.d.json`) → `build:ts`
   (`npm test` + `transpile.js tsconfig.json`) → `build:esbuild`
-  (`build-esbuild-esm.js` → ESM + browser IIFE).
+  (`build-esbuild-esm.js` → ESM only; see modalities).
 - Mechanism: custom `transpile.js` (TypeScript compiler API) emits CJS;
-  `build-esbuild*.js` bundles ESM + browser IIFE. Scripts MUST be committed
-  in-repo and MUST NOT fetch remote toolchains (hermetic builds).
+  `build-esbuild*.js` transpile per-file, unbundled (`bundle:false`) — NOT
+  bundles. Scripts MUST be committed in-repo; hermeticity binds ONLY
+  `transpile.js`/`build-esbuild*.js` (`lint`, `prepare`, `generate-readme-pdf`
+  fetch remote toolchains via `npx -y`).
 - Outputs MUST be: `public/cjs` (require), `public/esm` (import),
   `public/browser` (bundle), `public/types` (declarations) — matching the
   `exports` map in [03-core-framework](./03-core-framework.md).
@@ -35,12 +37,14 @@ Sources: `build-esbuild.js` (core), `build-esbuild-esm.js` + `transpile.js`
 | Modality | Extension | How produced | Consumed via |
 |---|---|---|---|
 | TypeScript sources | `.ts` (+ `.js` via `allowJs`) | authored directly; `tsconfig*.json` in every repo | `transpile.js` / `tsc` / esbuild |
-| CJS entry | `.cts` (`src/index.cts`) | esbuild bundle, `format:cjs`, `platform:node` → `public/cjs` | `require()` → `./public/cjs/index.cjs` |
-| ESM entry | `.mts` (`src/index.mts`) | esbuild bundle, `format:esm`, `platform:browser` → `public/esm` | `import` → `./public/esm/index.mjs` |
-| Per-file CJS | `.ts` → `.js` | `transpile.js` (TS compiler API) over `src/**/*.ts`, unbundled | `require('pkg/path')` → `./public/cjs/*.cjs` shims |
-| Per-file ESM | `.ts` → `.mjs` | esbuild `bundle:false`, `format:esm`, `outExtension:{".js":".mjs"}`, `target:node22`, `sourcemap:true`, `keepNames:true` | `import 'pkg/path'` → `./public/esm/*.mjs` |
-| Browser bundle | `.ts` (`src/QCObjects.ts`) | esbuild IIFE bundle, `platform:browser` → `public/browser/QCObjects.js` | `<script>` tag (no bundler needed) |
-| Type declarations | `.d.ts` | `tsc -p tsconfig.d.json` → `public/types/` (+ `./types/*` subpath) | `import` type resolution, Deno |
+| Per-file CJS | `.ts` → `.js` | `transpile.js` (TS compiler API) over `src/**/*.ts`, unbundled | `require('pkg/path')` → `./public/cjs/*.js` (on-disk `.js`, NOT `.cjs`) |
+| Per-file ESM | `.ts` → `.mjs` | esbuild `bundle:false`, `format:esm`, `platform:"browser"`, `outExtension:{".js":".mjs"}`, `target:node22`, `sourcemap:true`, `keepNames:true` | `import 'pkg/path'` → `./public/esm/*.mjs` |
+| Browser bundle (core repo) | `.ts` entry | esbuild IIFE bundle, `platform:browser` → `public/browser/QCObjects.js` | `<script>` tag (no bundler needed) |
+| Type declarations | `.d.ts` | `tsc -p tsconfig.d.json` → SINGLE `public/types/index.d.ts` (`outFile`, not a dir; no `./types/*` target exists) | `import` type resolution, Deno |
+(No `src/index.cts` / `src/index.mts` bundle entries exist in the CLI repo —
+the npm-script chain is per-file ESM only. The three-format (CJS+ESM+browser)
+build lives in the `build:esbuild` CLI COMMAND and the unwired
+`build-esbuild.js`; wire it or use the command.)
 
 - **No TSX/JSX:** zero `.tsx`/`.jsx` files exist in any repo and no JSX transform
   is configured (`tsconfig` has no `jsx` option; esbuild uses the `js` loader).
@@ -61,23 +65,28 @@ Sources: `build-esbuild.js` (core), `build-esbuild-esm.js` + `transpile.js`
 
 ## Script tables (normative — every repo MUST keep these names/meanings)
 
-Core/SDK/CLI shared: `build`, `build:ts`, `build:ts-types`, `build:browser`,
+Core/SDK/CLI shared: `build`, `build:ts`, `build:ts-types`, `build:browser`
+(= alias for `build:esbuild` in CLI — produces ESM only, NO browser bundle),
 `build:esbuild`, `start` (`qcobjects-shell`), `test:ts-types`
 (`tsc -p tsconfig.jasmine.json`), `test:jasmine` (ts-node + jasmine),
 `test` (`lint` + jasmine), `lint` (eslint `src/**/*.ts --fix`),
-`coverage` (core: nyc lcov+text over `npm run test`), `preversion`
+`coverage` (TEMPLATE-ONLY — core/CLI have no `coverage` script; template runs
+nyc lcov+text over `npm run test`), `preversion`
 (`npm cache verify` + tests/coverage), `postversion` (push branch AND tags —
 except tag-triggered-publish repos, see below), `sync`
 (`git add . && git commit -am`), `v-patch|v-minor|v-major` (via `qcobjects`),
 `qcobjects|cli` (passthrough), `prepare` (husky install, no-op outside git),
 `cli:help`, `tree`, `generate-readme-pdf` (markdown-pdf Letter → README.pdf +
-README-es.pdf, then uninstall).
+README-es.pdf, then uninstall — NOTE: `README-es.md` source is absent from the
+CLI repo, so the second half fails on clean checkout).
 
 App template deltas (`qcobjects-new-app`): `test` = eslint + jasmine;
 `start` = `createcert` + `serve`; `start:dev` (watch); `serve`/`server`,
-`collab`, `shell`, `createcert`, `http-server`, `gae-server`,
-`build`/`build:ts` (TS→JS), `publish:local`; parcel `targets.default.distDir =
-public` — `public/` MUST NOT be committed.
+`collab`, `shell` (runs `qcobjects shell` — no such CLI subcommand; use the
+`qcobjects-shell` binary), `createcert`, `http-server`, `gae-server`,
+`build` (= `publish:web`, the full chain — NOT a TS step) / `build:ts`
+(`npm test && npx tsc`); parcel `targets.default.distDir =
+public` — `public/` MUST NOT be committed. (No `publish:local` script exists.)
 
 ## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
 
