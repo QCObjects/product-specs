@@ -2,13 +2,13 @@
 
 [![docs](https://github.com/QCObjects/product-specs/actions/workflows/docs.yml/badge.svg)](https://github.com/QCObjects/product-specs/actions/workflows/docs.yml)
 [![pages](https://github.com/QCObjects/product-specs/actions/workflows/pages.yml/badge.svg)](https://github.com/QCObjects/product-specs/actions/workflows/pages.yml)
-[![Documentation Status](https://readthedocs.org/projects/qcobjects-product-specs/badge/?version=latest)](https://qcobjects-product-specs.readthedocs.io/)
+[![Documentation Status](https://readthedocs.org/projects/qcobjects-product-specs/badge/?version=latest)](https://readthedocs.org/projects/qcobjects-product-specs/)
 
 **Source of truth** for the QCObjects ecosystem: framework, SDK, CLI, resulting app
 structure, templates, conventions, and the unified v3.0 vision.
 
 **Published docs:** [GitHub Pages](https://qcobjects.github.io/product-specs/) (from `main`)
-· [Read the Docs](https://qcobjects-product-specs.readthedocs.io/) · local preview via `mkdocs serve`.
+· [Read the Docs](https://qcobjects-product-specs.rtfd.io/) · local preview via `mkdocs serve`.
 
 One document per product foundation. Each spec is normative (RFC 2119 `MUST` /
 `SHOULD` / `MAY`) with an explicit Verification section so future plans can be
