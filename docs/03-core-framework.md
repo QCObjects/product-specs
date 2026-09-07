@@ -430,6 +430,17 @@ in `src/tag_filter.ts`).
   for `template source … is default|inline`, `type for … is Component`
   (base-class fallback), `LOADING COMPONENT DATA`, and `Something wrong loading
   the component`.
+- **Third-party lib integration (reference: QR scanner app):** vendor the lib
+  under `js/packages/thirdparty/libs/<lib>/` (with its LICENSE), then chain-load
+  it from the controller via `loadDependencies(callback)`:
+  `CONFIG.get("<lib>-path", "<vendored default>")` locates the base,
+  `CONFIG.get("<lib>-external", false)` flips vendored vs CDN, and nested
+  `New(SourceJS,{url, external, done})` pushes ordered dependencies (worker
+  before lib), calling back when ready. Query live DOM through
+  `component.shadowRoot.subelements(selector)` (`subelements` works on
+  `ShadowRoot` directly). Headless `New(Component,{templateURI:"", body: el,
+  tplsource:"none"})` MAY wrap raw elements as throwaway component instances
+  for framework-flavored DOM utilities.
 
 ## Effects, Timer, codecs (normative)
 
