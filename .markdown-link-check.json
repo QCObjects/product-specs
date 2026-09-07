@@ -1,0 +1,7 @@
+{
+  "ignorePatterns": [
+    "https://readthedocs.org/projects/qcobjects-product-specs/",
+    "https://qcobjects-product-specs.rtfd.io/"
+  ],
+  "aliveStatusCodes": [200, 301, 302, 307]
+}
