@@ -36,6 +36,25 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
 - Template hero/pages components (`templates/components/{hero,pages}`) MUST
   keep `name` ↔ `*.tpl.html` file correspondence (`tplextension: tpl.html`).
 
+## Template catalogue (normative)
+
+| Template (npm) | `create` flag | Source | Purpose | Status |
+|---|---|---|---|---|
+| `qcobjectsnewapp` (`v2.4.40-ts`) | `--pwa` / default | `QuickCorp/qcobjects-new-app` (public) | Reference PWA starter + integration testbed (`demo-tests/`) | stable, canonical |
+| `qcobjects-ecommerce-amp` (`v0.0.7`) | `--amp` | private GitLab | AMP storefront starter | stable |
+| `qcobjectsnewphp` (`v1.0.35`) | `--php` | private GitLab | PHP-backend PWA starter | stable |
+| CLI `src/templates/pwa` + `src/templates/apps` | built-in | `qcobjects-cli` repo | Minimal embedded shell (`sw.js`, `spa-local.*`) — fallback when npm is unreachable | stable |
+| `create-qcobjects` (`v2.0.13`) | `npx` initializer | `QCObjects/create-qcobjects` (private) | Standalone creation tool | stable |
+| any npm package | `--custom <name>` | author-provided | Custom layouts per [05-cli](./05-cli.md) § Custom templates | stable mechanism |
+
+- New official templates MUST enter this table (flag, source, purpose, status)
+  in their release PR and MUST satisfy the Template contract above.
+- Private-source templates MUST still publish versioned npm tarballs so
+  `create` works without repo access; their sources MAY stay private.
+- `--custom` names MUST use the `-template` suffix convention
+  (`qcobjects-<name>-template`, kind infixes preserved:
+  `qcobjects-handler-<name>-template`, etc. — see [05-cli](./05-cli.md)).
+
 ## CSS framework interoperability (normative)
 
 The framework is CSS-agnostic: it ships plain CSS (SDK `src/css`, template

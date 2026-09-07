@@ -86,8 +86,11 @@ Source: `src/cli-main.ts` (`choiceOption.create`, `copyTemplate`), pinned at
   (see [06-app-structure](./06-app-structure.md)).
 - **Authoring custom templates:** any npm package with the app layout
   ([06-app-structure](./06-app-structure.md)) + a `package.json` works as a
-  `--custom` template. Template packages SHOULD be named
-  `qcobjects-template-*` and MUST declare the layout they stamp in their README.
+  `--custom` template. Template packages MUST carry `-template` as a SUFFIX —
+  `qcobjects-<name>-template` (e.g. `qcobjects-app-template`) — and MUST declare
+  the layout they stamp in their README. Kind-specific starters keep their kind
+  infix: `qcobjects-handler-<name>-template`, `qcobjects-lib-<name>-template`,
+  `qcobjects-command-<name>-template`.
 - **Beyond apps — custom commands/libs/handlers:** `copyTemplate` copies the
   whole package dir, so `--custom` templates MAY stamp any package kind, not
   just apps: a command starter (class in a `com.qcobjects.cli.commands.*`
