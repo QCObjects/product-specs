@@ -216,6 +216,13 @@ Rules: custom meta processors register via `Processor.setProcessor(fn)` with
 non-arrow functions (`this` is the handler); names MUST be alphanumeric;
 processors MUST be pure string transforms (no DOM writes — return markup);
 templates SHOULD prefer `$component`/`$mapper` over hand-concatenated tags.
+Multi-arg form is supported — args arrive positionally after the component
+instance (production proof: `$MAILCHIMP_API(KEY,SERVER,KEY_LIST)` joins three
+env vars with `-`, registered inside the mailchimp lib package itself).
+**Processors travel with packages:** an add-on that needs custom placeholders
+MUST register them in its own module (lib/handler entry), never ask the app to
+register them — the mailchimp lib's `api/*.js` registering `MAILCHIMP_API` at
+import time is the canonical pattern.
 
 ## Component model (normative)
 

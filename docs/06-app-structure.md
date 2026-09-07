@@ -98,6 +98,34 @@ Netlify one-click deploy supported; live demo at `https://newapp.qcobjects.dev`;
 Docker: `docker run -p 8080:8080 -p 8443:8443 qcobjects/qcobjects-newapp`
 → `https://127.0.0.1:8443/`.
 
+## Production patterns (normative, reference: production app `v2.4` line)
+
+- **Multi-env configs:** apps MAY ship `config.json` + `config-debug.json` +
+  `config-prod.json` variants (same shape, different `$ENV` bindings/ports);
+  the deploy step selects which file becomes the effective `config.json`
+  (copy/symlink at deploy time — there is no framework `--config` flag).
+  Secrets MUST differ per environment; never reuse prod credentials in debug.
+- **Web publish chain:** production `publish:web` runs staged —
+  `build:static` (copy `src/` → `build/`) → `build:ts` (test + `tsc`) →
+  `publish:static` (`build/` → `public/`, excluding `js`) → `publish:esbuild`
+  (bundle to `public/js`) → `minify:css`. `prestart` SHOULD run the publish
+  chain so servers never boot stale artifacts.
+- **Deploy targets:** beyond Netlify/Docker — `app.yaml` (App Engine,
+  `gae-server`), `qcobjects.service` (systemd unit), `Dockerfile` +
+  `docker-compose.yml` (container; base `qcobjects/qcobjects`), `_redirects`
+  (host redirect rules), cloud aliases (`azure-server`, `aws-server`,
+  `do-server` all delegate to `npm start`). Multi-target apps MUST keep one
+  canonical `publish:web` that every target invokes.
+- **Email templates:** transactional mail lives in `src/templates/email/*.tpl.html`
+  (one template per audience, e.g. user + backoffice notifications), rendered
+  server-side through the newsletter/contactform handlers with subjects from
+  `$ENV(...)` settings — never hardcode recipients, subjects, or keys.
+- **Backend entry:** production backends expose a one-line `backend/app.js`
+  (`require("qcobjects-cli/qcobjects-http2-server")`); all behavior stays in
+  `config.json` routes, never in the entry file.
+- **Quality gates:** `lighthouse` script with budgets SHOULD run against the
+  local TLS server before release; `spec/` + `coverage/` MUST stay green.
+
 ## Verification
 
 - `npm run build` from clean checkout reproduces `public/` byte-equivalent config.
