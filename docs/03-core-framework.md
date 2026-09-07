@@ -247,7 +247,9 @@ import time is the canonical pattern.
 `tplsource` (`default`|`none`|`inline`|`external`); `url`, `name`, `method` (default `GET`); `data`
 (`{{prop}}` binding; needs `rebuild()` to refresh); `reload` (replace vs append);
 `cached` (load template once; static default or per-instance); `routingWay`
-(`hash`|`pathname`|`search`, set globally via CONFIG), `validRoutingWays`,
+(`hash`|`pathname`|`search`, set globally via CONFIG — framework default is
+`hash` (`ConfigSettings`), but stamped app templates set `pathname`, so the
+EFFECTIVE default in real apps is pathname; hash works with zero configuration), `validRoutingWays`,
 `routingNodes`, `routings`, `routingPath`, `routingSelected`; `subcomponents`;
 `body` (plain property — assigning it does NOT rebuild routings; the routings
 builder runs from construction and the route flow).

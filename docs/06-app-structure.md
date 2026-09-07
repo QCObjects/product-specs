@@ -52,6 +52,9 @@ myapp/
 - `public/` MUST be generated artifacts only — never hand-edited.
 - PWA files (`manifest.json`, `sw.js`, `robots.txt`, `404.html`) MUST exist in
   every production app; `sw.js` MUST NOT cache authenticated API responses.
+- `index.html` SHOULD carry a `Content-Security-Policy` meta tag; ship WIDE-OPEN
+  only for local/dev, and lock it down for production (reference: view-stack
+  tutorial's permissive CSP with explicit lockdown note).
 
 ## Boot sequence (normative, the `init.js` CONFIG block)
 
