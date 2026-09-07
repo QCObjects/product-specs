@@ -174,12 +174,13 @@ app root plus packaging metadata:
 - **`renderer.js`:** stock Electron renderer stub (no Node APIs; bridge via preload).
 - **`package.json`:** `"main": "main.js"`, `"start": "electron ."`, `electron`
   dependency (reference pins v8 line — use a maintained Electron on new apps).
-  Publish via `qcobjects publish electron` / `publish:electron` script.
+  Publish via the template `publish:electron` npm script (the CLI has no native
+  electron target).
 - The SAME `src/` tree (components, templates, PWA assets) ships inside the
   shell — no app-code fork between web and desktop; only the shell trio +
   packaging differ.
 
-## Hybrid packaging — PhoneGap/Cordova (normative, reference: `qcobjects-phonegap-app`)
+## Hybrid packaging — PhoneGap/Cordova (reference: `qcobjects-phonegap-app`)
 
 Hybrid apps ship the same web tree inside a Cordova shell:
 

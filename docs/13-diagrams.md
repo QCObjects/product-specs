@@ -21,7 +21,7 @@ flowchart TB
     SDK --> CORE
     CLI --> SRV[Server adapters<br/>node · bun -P2-]
     SRV --> H[Handlers / microservices<br/>static · php · wasm · fastapi]
-    CFG(config.json<br/>$ENV / $config] -.-> CLI
+    CFG[config.json<br/>$ENV / $config] -.-> CLI
     CFG -.-> SRV
     CFG -.-> H
 ```
@@ -53,6 +53,8 @@ flowchart LR
     T --> N[npm dist-tag<br/>latest · beta · lts]
 ```
 
+Source: [`diagrams/release-flow.mmd`](https://github.com/QCObjects/product-specs/blob/development/diagrams/release-flow.mmd)
+
 ## Component tree (Nested Components Stack)
 
 ```mermaid
@@ -65,6 +67,8 @@ flowchart TB
     C3 --> SVC[SignupClientService<br/>JSONService POST]
     SVC --> MS[Microservice<br/>org.quickcorp.backend.signup]
 ```
+
+Source: [`diagrams/component-tree.mmd`](https://github.com/QCObjects/product-specs/blob/development/diagrams/component-tree.mmd)
 
 ## Nested components routing
 
@@ -115,5 +119,4 @@ Source: [`diagrams/component-layout.mmd`](https://github.com/QCObjects/product-s
 ## Verification
 
 - `npx --yes @mermaid-js/mermaid-cli -i diagrams/ecosystem.mmd` renders without errors.
-- Same check MUST pass for `diagrams/nested-routing.mmd` and
-  `diagrams/component-layout.mmd` when the set changes.
+- Same check MUST pass for every other `.mmd` in `diagrams/` when the set changes.

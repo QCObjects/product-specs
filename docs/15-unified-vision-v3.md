@@ -99,7 +99,7 @@ through Runtime Bridges (all npm-installed, keyword-discovered, per spec 02).
 
 | Line | State | Support |
 |---|---|---|
-| `v2.3`, `v2.4-beta`, `v2.4-ts`, `v2.5-beta` | EOL, archive tags only | No patches, features, or community support |
+| `v2.3.x`, `v2.4.x-beta`, `v2.4.x-ts`, `v2.5.x-beta` lines (dotted versions, e.g. `v2.3.1`, `v2.4.1-beta`) | EOL, archive tags only (CLI also carries `archive/v2.4-beta`, `archive/v2.4-ts` prefixed tags) | No patches, features, or community support |
 | v3.0 track | Current | Full maintenance |
 | Legacy enterprise | SLA only | Custom patching / guided migration via consulting contracts |
 

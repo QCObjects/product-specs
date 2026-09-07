@@ -13,13 +13,15 @@ All repos in the QCObjects GitHub org and every npm distribution.
 
 ## Current position (normative, v2.x)
 
-- Core and SDK distributions are **LGPL-3.0** (`LICENSE.txt` in-repo,
-  `"license": "LGPL-3.0"` in `package.json`, FOSSA-tracked).
-- Every generated source file on the v2.x line MUST carry the LGPL header:
+- Core, SDK, and CLI distributions are **LGPL-3.0** (`LICENSE.txt` in-repo,
+  `"license": "LGPL-3.0"` in `package.json`, FOSSA-tracked). The app template
+  ships `"license": "LGPL-3.0-or-later"` — same family, different SPDX string.
+- Every generated source file on the v2.x line MUST carry the LGPL header
+  (quoted verbatim from source, with its stale link flagged inline):
 
 ```
 QuickCorp/QCObjects is licensed under the GNU Lesser General Public License v3.0
-[LICENSE] (https://github.com/QuickCorp/QCObjects/blob/master/LICENSE.txt)
+[LICENSE] (https://github.com/QuickCorp/QCObjects/blob/master/LICENSE.txt)   <-- STALE: wrong org mirror + dead branch; canonical is https://github.com/QCObjects/QCObjects/blob/main/LICENSE.txt
 Permissions of this copyleft license are conditioned on making available
 complete source code of licensed works and modifications under the same
 license or the GNU GPLv3. Copyright and license notices must be preserved.
@@ -30,7 +32,8 @@ the larger work.
 Copyright (C) 2015 Jean Machuca,<correojean@gmail.com>
 ```
 
-- Contributor Covenant `CODE_OF_CONDUCT.md` applies; violations report to
+- Contributor Covenant `CODE_OF_CONDUCT.md` (carried by the core repo; SDK/CLI
+  checkouts lack it — each migrating repo MUST add it); violations report to
   `info@quickcorp.cl`; contributions follow `CONTRIBUTING.md`.
 
 ## Migration to MIT (normative, v3.0 P1)
