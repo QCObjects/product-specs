@@ -46,7 +46,7 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
 | CLI `src/templates/pwa` + `src/templates/apps` | built-in | `qcobjects-cli` repo | Minimal embedded shell (`sw.js`, `spa-local.*`) — fallback when npm is unreachable | stable |
 | `create-qcobjects` (`v2.0.13`) | `npx` initializer | `QCObjects/create-qcobjects` (private) | Standalone creation tool | stable |
 | any npm package | `--custom <name>` | author-provided | Custom layouts per [05-cli](./05-cli.md) § Custom templates | stable mechanism |
-| `QCObjects-App-Templates/*` boilerplates | `--custom <name>` | `QCObjects-App-Templates` org (public): `swipper-app` (swiper/slider showcase), `boilerplate-pwa`, `boilerplate-tailwind`, `boilerplate-tabs-spa`, `boilerplate-dashboard`, `boilerplate-hello-world` (all `v1.0.0`) | Minimal starters by concern | stable, legacy naming |
+| `QCObjects-App-Templates/*` boilerplates | `--custom <name>` | `QCObjects-App-Templates` org (public): `qcobjects-swipper-template` (swiper/slider showcase), `qcobjects-boilerplate-{pwa,tailwind,tabs-spa,dashboard,hello-world}-template` (all `v1.0.0`) | Minimal starters by concern | stable, convention-compliant |
 
 - New official templates MUST enter this table (flag, source, purpose, status)
   in their release PR and MUST satisfy the Template contract above.
@@ -55,8 +55,8 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
 - `--custom` names MUST use the `-template` suffix convention
   (`qcobjects-<name>-template`, kind infixes preserved:
   `qcobjects-handler-<name>-template`, etc. — see [05-cli](./05-cli.md)).
-  The `QCObjects-App-Templates/*` boilerplates predate this rule (bare names,
-  no keywords) and are grandfathered — new templates MUST NOT copy their naming.
+  The `QCObjects-App-Templates/*` boilerplates were renamed into compliance
+  (bare names → `-template` suffix); GitHub redirects preserve old URLs.
 
 ## CSS framework interoperability (normative)
 
