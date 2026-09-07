@@ -78,6 +78,7 @@ The framework is CSS-agnostic: it ships plain CSS (SDK `src/css`, template
   source `.scss` files.
 - **Theme matrix:** every template ships `css/theme/{basic,cyan,redlight,xtra}`
   + `desktop/` + `mobile/` variants and `css/components/` per-component styles;
+  production apps MAY add themes (observed: `neumorphism` in the store app);
   new themes MUST follow the same directory shape. Switching themes MUST be a
   CSS swap only — no component or template changes.
 

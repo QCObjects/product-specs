@@ -166,6 +166,24 @@ proxy → vendor, never browser → vendor. The OpenAI/Azure packages prove the 
   keep `cached:false`; streaming/SSE responses are NOT covered by this pattern
   (request/response JSON only — verify before promising streams).
 
+## Service composition — BFF aggregation (normative, reference: store app)
+
+Beyond proxying, a microservice verb method MAY run one or more client `Service`
+subclasses through `serviceLoader` and reshape their responses into `body`
+(backend-for-frontend aggregation). Production proof (Printful catalog):
+
+- `Microservice.get()` instantiates `PrintfulService` (a `Service` subclass
+  whose `_new_` sets `Authorization: Basic <process.env KEY>` — `process.env`
+  exists only in Node, so the class is backend-only by construction),
+  `serviceLoader(New(PrintfulService,{data:null}))`, then
+  `microservice.body = JSON.parse(service.template)` + `done()`.
+- **Rules:** composing services MUST be `Service` subclasses (never raw
+  `https` calls — keeps headers, `done`/`fail`, and both transport legs);
+  secrets MUST come from `process.env`/`$ENV` (never literals, never client
+  reachable); each upstream failure MUST map to a `body` + `done()` (or a
+  deliberate non-200), never an unhandled rejection; aggregation of N
+  upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
+
 ## Backend routing contract (`config.json`)
 
 - Every route REQUIRES `path` + `microservice` (package string as indexing point).
