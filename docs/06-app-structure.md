@@ -34,6 +34,9 @@ myapp/
       init.ts          # boot sequence (Init component)
       customWidgets.ts # app widgets registration (RegisterWidget calls)
       packages/        # Package() namespaces: org.myapp.*
+        # per-layer split: <org>.<app>.{components,controllers,effects,models,views}.js
+        # + installer.js + thirdparty/libs vendored under packages/thirdparty/libs/<lib>/
+      res/               # hybrid-mobile assets (icons, .pgbomit) when packaging via PhoneGap/Cordova
     templates/
       components/      # hero/, pages/
   public/              # build output only (parcel/esbuild distDir)
