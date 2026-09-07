@@ -29,11 +29,6 @@ Node >= 22, npm >= 10; install with `npm i --legacy-peer-deps`.
   `launch <appname>`; `-V/--version`, `-h/--help`; per-command help via
   `qcobjects-cli [command] --help`.
 
-- Built-in command surface (`qcobjects [options] [command]`):
-  `create <appname>`, `publish <appname>`, `generate-sw <appname>`,
-  `launch <appname>`; `-V/--version`, `-h/--help`; per-command help via
-  `qcobjects-cli [command] --help`.
-
 ## Built-in commands, handlers, and libs (normative)
 
 The framework ships a minimal set of built-ins that are always available
@@ -41,19 +36,27 @@ without installing extra packages. All other capabilities enter via the
 keyword autoload contract ([05-cli](./05-cli.md) § Handlers/plugins/commands autoload,
 [16-addons](./16-addons.md)).
 
-- **Built-in commands** (registered in `cli-main.ts`):
-  `create`, `publish`, `upgrade-to-enterprise`, `generate-sw`, `launch`.
-  Each is implemented in `choiceOption.*` and may accept sub-flags
-  (`--pwa`, `--amp`, `--php`, `--custom`, `--tests`).
+- **Built-in commands** — two tiers, all shipping in-repo:
+  - `cli-main.ts` `choiceOption`: `create`, `publish` (STUB — logs
+    `"publish is not yet implemented"`, ignores flags), `upgrade-to-enterprise`,
+    `generate-sw`, `launch` (ignores its `<appname>` argument; serves CWD after
+    a 5s delay). Sub-flags: `--pwa`, `--amp`, `--php`, `--custom`
+    (takes a value ONLY on `create`; valueless on `publish`), `--tests`
+    (accepted but silently ignored — no-op).
+  - In-repo families via `cli-commands.ts`: `v-major/v-minor/v-patch/v-sync/
+    v-changelog` (version), `jira`, `publish:static`, `build:typescript`
+    (`build:ts`), `build:esbuild` (`build:esb`); `upgrade-to-enterprise` wired
+    directly in `cli-main.ts`. `collab` is NOT a commander family — it is a
+    separate binary entry (`qcobjects-collab.ts` → `collab-server.ts`).
 
-- **Built-in handler** (`com.qcobjects.backend.microservice.static`):
-  registered by `defaultsettings.ts` at boot when `backend.routes` is empty.
-  Serves the framework's own assets with CORS `*`:
-  - `QCObjects.js` (core source)
-  - `QCObjects-SDK.js` (SDK entry)
-  - `/qcobjects-sdk/*` (entire SDK tree)
-  This handler is a `BackendMicroservice` subclass that performs static-file
-  redirection; it is NOT a general-purpose static file server.
+- **Built-in handler records** (`com.qcobjects.backend.microservice.static`):
+  `defaultsettings.ts` APPENDS three static routes unconditionally (concat,
+  not gated on empty `backend.routes`) at every boot:
+  `^/QCObjects.js$` → core `src/QCObjects.js`,
+  `^/js/packages/QCObjects-SDK.js$` → SDK `src/QCObjects-SDK.js`,
+  `^/qcobjects-sdk/(.*)$` → SDK tree — all CORS `*`. These are route RECORDS
+  naming the static microservice; no `BackendMicroservice` subclass is defined
+  in this repo. Use them for framework-asset serving instead of custom code.
 
 - **Core libraries** (always present as peer dependencies):
   `qcobjects` (core framework) and `qcobjects-sdk` (controllers, views,
@@ -75,19 +78,27 @@ Source: `src/cli-main.ts` (`choiceOption.create`, `copyTemplate`), pinned at
   `--amp` → `qcobjects-ecommerce-amp`, `--pwa` (or no flag) → `qcobjectsnewapp`,
   `--php` → `qcobjectsnewphp`, `--custom <templateappname>` → any npm package
   name, `--tests` → test suite. `publish` mirrors the same flags.
-- **Flow (binding):** `npm init -y` → `npm i --save-dev <template>` → adopt the
-  template's `package.json` (renamed to `<appname>`, version reset to `1.0.0`,
-  `repository` cleared) → `copyTemplate()` from the installed package dir into
-  the project (excluding `package.json`, `node_modules`, `.DS_Store`) →
-  `npm uninstall <template>` + `npm install qcobjects-cli` + full `npm i`.
+- **Flow (binding):** `npm init -y` → `npm i --save-dev --legacy-peer-deps
+  <template>` → adopt the template's `package.json` (renamed to `<appname>`,
+  version reset to `1.0.0` via direct mutation, `repository` cleared) →
+  `copyTemplate()` from the installed package dir into the project (excluding
+  `package.json`, `node_modules`, `.DS_Store`) → `npm uninstall <template>
+  --save` + `npm install qcobjects-cli` + full `npm i --legacy-peer-deps` +
+  `npm cache verify` → tail: `qcobjects-createcert`, fetch of `.gitignore`
+  from GitHub, `git init`.
 - **Key consequence:** the template package is scaffolding only — installed,
   copied, then UNINSTALLED. Apps MUST NOT retain a runtime dependency on their
   template package; all cohesion lives in the copied files
   (see [06-app-structure](./06-app-structure.md)).
 - **Authoring custom templates:** any npm package with the app layout
   ([06-app-structure](./06-app-structure.md)) + a `package.json` works as a
-  `--custom` template. Template packages SHOULD be named
-  `qcobjects-template-*` and MUST declare the layout they stamp in their README.
+  `--custom` template (`options.createCustom` is used verbatim as the npm name —
+  no naming constraint is enforced by tooling). Template packages MUST carry
+  `-template` as a SUFFIX by project convention (review-enforced, not
+  tool-gated) — `qcobjects-<name>-template` (e.g. `qcobjects-app-template`) —
+  and MUST declare the layout they stamp in their README. Kind-specific starters
+  keep their kind infix: `qcobjects-handler-<name>-template`,
+  `qcobjects-lib-<name>-template`, `qcobjects-command-<name>-template`.
 - **Beyond apps — custom commands/libs/handlers:** `copyTemplate` copies the
   whole package dir, so `--custom` templates MAY stamp any package kind, not
   just apps: a command starter (class in a `com.qcobjects.cli.commands.*`
@@ -101,28 +112,33 @@ Source: `src/cli-main.ts` (`choiceOption.create`, `copyTemplate`), pinned at
 
 ## Binaries (normative)
 
-`qcobjects` (main) MUST exist alongside: `qcobjects-server`
-(HTTP/HTTPS/HTTP2), `qcobjects-collab`, `qcobjects-shell`,
-`qcobjects-createcert`, plus GAE server variants (`main-http-gae-server`).
+Single dispatcher: `bin/qcobjects-cli.js` serves all 10 `package.json` bin
+aliases (`qco`, `qcobjects`, `qcobjects-cli`, `qcobjects-server`,
+`qcobjects-http-server`, `qcobjects-http2-server`, `qcobjects-gae-server`,
+`qcobjects-shell`, `qcobjects-collab`, `qcobjects-createcert`) via an
+`entryMap` dispatch on the invoked basename. There are no sibling binaries.
 
 ## Servers (normative)
 
-- Implementations: `main-http-server.ts` (HTTP), `main-http2-server.ts`
-  (HTTP/2, default for `serve`), `main-http-gae-server.ts` (App Engine),
-  entered via `qcobjects-http-server.ts` / `qcobjects-http2-server.ts` /
-  `qcobjects-gae-http-server.ts`.
+- Implementations: `main-http-server.ts` (HTTP legacy), `main-http2-server.ts`,
+  `main-http-gae-server.ts` (App Engine), entered via `qcobjects-http-server.ts` /
+  `qcobjects-http2-server.ts` / `qcobjects-gae-http-server.ts`. NOTE: the
+  `qcobjects-http2-server` entrypoint picks `HTTPServer` vs `HTTP2Server` on
+  `useLegacyHTTP` — it is not always HTTP/2.
 - ALL behavior from `config.json`: ports (`serverPortHTTP/HTTPS`),
   `documentRoot`, `backend.routes`, TLS via `$config(domain)`-derived filenames.
-- `process.env.PORT` overrides the HTTP listen port.
-- local `config.json` at CLI root is gitignored dev-only (default
-  `{"devmode":"debug"}`); `$ENV(VAR)` templates resolve in `defaultsettings.ts`.
+- `process.env.PORT` overrides the listen port ONLY on the legacy HTTP and GAE
+  servers; the default HTTP/2 `start()` ignores `PORT`.
+- local `config.json` at CLI root is gitignored dev-only (default devmode
+  `$ENV(DEVMODE,info)` → `info`); `$ENV(VAR)` templates resolve in `defaultsettings.ts`.
 - Production recommendation: HTTP/2 server on Ubuntu 18.x+ with NodeJS 12.x+.
 
 ## Commands & internals (normative)
 
-- Framework: Commander — `SwitchCommander` (`cli-main.ts`); families in
+- Framework: Commander — `SwitchCommander` (`cli-main.ts`); in-repo families in
   `cli-commands*.ts` (build-esbuild, build-typescript, jira, publish-static,
-  version, enterprise, collab), registered via `cli-commands.ts`.
+  version) re-exported via `cli-commands.ts`; `upgrade-to-enterprise` wired
+  directly in `cli-main.ts`; `collab` is a separate binary, not a family.
 - Modules import `qcobjects` and use `InheritClass`, `Package()`, `Export()`,
   `CONFIG`, `logger`, `Component`, `Service` (source convention, binding).
 - Plugin autodiscovery: see "Handlers/plugins/commands autoload" below.
@@ -143,22 +159,24 @@ Source: `src/defaultsettings.ts` (`__load_default_settings__`, runs at CLI boot;
   `findPackageNodePath` resolution.
 - **Flags:** master `autodiscover` OR per-type `autodiscover_libs`,
   `autodiscover_handlers`, `autodiscover_commands`. CLI built-in defaults turn
-  ON `autodiscover`, `autodiscover_commands`, `autodiscover_handlers`
-  (`defaultsettings.ts` lines ~100-102) — so autoload is active unless the app
-  `config.json` explicitly sets them `false`. `autodiscover_libs` has NO built-in
-  default: libs load only with explicit opt-in. Production configs SHOULD set
-  exactly the flags they need and `false` for the rest (least privilege:
-  every auto-imported package runs code at boot).
-- **Order:** libs → handlers → commands → devCommands, each as `Promise.all`
-  over dynamic imports.
-- **Failure semantics:** lib/handler load errors warn and continue
-  (`An error ocurred loading libs/handlers`); command load errors are FATAL
-  (logged, rethrown — boot aborts). A broken `qcobjects-command` dependency
-  therefore blocks server start by design.
-- **Registry:** discovered lists are published under `CONFIG.backend` as
-  `libs`, `handlers`, `commands`, `devCommands`, plus the raw `dependencies` /
-  `devDependencies` name lists; `backend.plugins = commands + devCommands`.
-  Introspection MUST read these keys, never re-scan `node_modules`.
+  ON `autodiscover` (`defaultsettings.ts`), so with shipped defaults ALL kinds
+  — including libs — autoload with NO opt-in. `autodiscover_libs` only matters
+  when an app explicitly sets master `autodiscover:false`: it re-enables libs
+  alone. Production configs SHOULD set exactly the flags they need and `false`
+  for the rest (least privilege: every auto-imported package runs code at boot).
+- **Order/concurrency:** libs → handlers → commands → devCommands fire as four
+  independent non-awaited chains — NO guaranteed order.
+- **Failure semantics:** ALL FOUR chains attach warn-and-continue catches
+  (including commands) — a broken `qcobjects-command` logs a warning and boot
+  continues; nothing aborts boot. (The inner rethrow in `loadCommands` is
+  swallowed by the outer catch.)
+- **Registry:** `CONFIG.backend` publishes `libs`, `handlers`, `commands`,
+  `devCommands` — possibly still EMPTY at read time (fire-and-forget loaders).
+  The raw `dependencies`/  `devDependencies` name lists are NEVER published
+  (their memo closures return `[]` permanently — dead code). Introspection MUST
+  read the four kind keys and tolerate emptiness, never re-scan `node_modules`.
+  (`backend.plugins = commands + devCommands` is also written, but races the
+  fire-and-forget loaders — do not rely on it at boot.)
 - **Publishing contract:** a handler/plugin/command package MUST declare its
   role in `package.json` `keywords` (`qcobjects-handler`, `qcobjects-command`,
   or `qcobjects-lib`) or it will never load, no matter the flags.
@@ -175,21 +193,26 @@ Version lives in the `VERSION` file; commands sync it to `package.json`/git:
 - `v-changelog` — changelog from annotated tags grouped by minor → stdout
   (`v-changelog > CHANGELOG.md`).
 - Typical flow: `v-patch --git --npm -m "msg"` → CI publishes → `v-changelog`.
-- **Duplicate-push rule:** `v-* --git --npm` runs `npm version` (fires
-  `preversion`/`postversion`) AND `syncGit` pushes again — the tag pushes twice.
-  GitHub Actions (tag-triggered publish) repos MUST set
-  `"postversion": "git push"` (branch only; `syncGit` pushes the tag once).
-  Without `--npm`, no `npm version` runs: single commit, single tag push.
+- **Single-push rule:** `syncGit` pushes exactly once per release either way —
+  with `--npm` the tag is created by `npm version` (manual `git tag -a`
+  skipped), without `--npm` by `git tag -a` — then one `git push && git push
+  --tags`. There is no double tag push in current code.
+  GitHub Actions (tag-triggered publish) repos MUST still set
+  `"postversion": "git push"` (branch only) to keep release pushes minimal.
 - Tests: jasmine 3.7, single `spec/testsSpec.ts` asserting `qcobjects` version
   parity between `peerDependencies` and `devDependencies`; SDK mocked via
   `tsconfig.jasmine.json` mapping; `stopSpecOnExpectationFailure`,
   `failSpecWithNoExpectations`, `random:false`.
 - Lint is permissive (`recommendedTypeChecked` with core `no-unsafe-*`,
-  `no-explicit-any`, `no-unused-vars` off); ignores `**/*.js`, `spec/**`.
+  `no-explicit-any`, `no-unused-vars` off); ignores cover `**/*.js`,
+  `spec/**/*`, `src/*.js`, `src/**/*.js`, `node_modules…`.
+  (The `tsconfig.jasmine.json` SDK-mock mapping points at
+  `spec/mocks/qcobjects-sdk.mock.ts`, which does NOT exist — dangling.)
 
 ## Verification
 
 - Fresh `qcobjects create myapp --pwa && qcobjects-server` serves the PWA shell
   on configured ports with zero manual edits.
 - `npm test` (eslint + jasmine) green; `tsc` declaration build emits `public/types`.
-- `v-patch --git` (no `--npm`) produces exactly one tag push (no duplicate CI).
+- `v-patch --git` (no `--npm`) produces exactly one tag push via `git tag -a`
+  (single push, no duplicate CI).

@@ -21,8 +21,8 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
   component, one backend route call, offline shell (service worker), and
   one form with validation.
 - Template `config.json` MUST use `$ENV(...)` for every secret/host and
-  `$config(...)` for derived paths; a committed `.env.example` MUST document
-  each variable.
+  `$config(...)` for derived paths; a committed `.env.example` SHOULD document
+  each variable (the canonical template does not ship one — add it per app).
 - CLI `src/templates/pwa` is the minimal shell; `src/templates/apps` are
   fuller starters. Both MUST track the [06-app-structure](./06-app-structure.md)
   layout; any layout change MUST update templates in the same release.
@@ -35,6 +35,32 @@ semantics: [06-app-structure](./06-app-structure.md); widgets: [04-sdk](./04-sdk
   new themes MUST follow the same directory shape.
 - Template hero/pages components (`templates/components/{hero,pages}`) MUST
   keep `name` ↔ `*.tpl.html` file correspondence (`tplextension: tpl.html`).
+
+## Template catalogue (normative)
+
+| Template (npm) | `create` flag | Source | Purpose | Status |
+|---|---|---|---|---|
+| `qcobjectsnewapp` (`v2.4.40-ts`) | `--pwa` / default | `QuickCorp/qcobjects-new-app` (public) | Reference PWA starter + integration testbed (`demo-tests/`) | stable, canonical |
+| `qcobjects-ecommerce-amp` (`v0.0.7`) | `--amp` | private GitLab | AMP storefront starter | stable |
+| `qcobjectsnewphp` (`v1.0.35`) | `--php` | private GitLab | PHP-backend PWA starter | stable |
+| CLI `src/templates/pwa` + `src/templates/apps` | built-in | `qcobjects-cli` repo | Minimal embedded assets (`sw.js` for `generate-sw`, `spa-local.*`, cert helpers) — NOT a `create` fallback (`create` always `npm i`s the template package) | stable |
+| `create-qcobjects` (`v2.0.13`) | `npx` initializer | `QCObjects/create-qcobjects` (private) | Standalone creation tool | stable |
+| any npm package | `--custom <name>` | author-provided | Custom layouts per [05-cli](./05-cli.md) § Custom templates | stable mechanism |
+| `QCObjects-App-Templates/*` boilerplates | `--custom <name>` | `QCObjects-App-Templates` org (public): `qcobjects-swipper-template` (swiper/slider showcase), `qcobjects-boilerplate-{pwa,tailwind,tabs-spa,dashboard,hello-world}-template` (all `v1.0.0`) | Minimal starters by concern | stable, convention-compliant |
+
+- New official templates MUST enter this table (flag, source, purpose, status)
+  in their release PR and MUST satisfy the Template contract above.
+- Private-source templates MUST still publish versioned npm tarballs so
+  `create` works without repo access; their sources MAY stay private.
+- `--custom` names MUST use the `-template` suffix convention
+  (`qcobjects-<name>-template`, kind infixes preserved:
+  `qcobjects-handler-<name>-template`, etc. — see [05-cli](./05-cli.md)).
+  The `QCObjects-App-Templates/*` boilerplates were renamed into compliance
+  (bare names → `-template` suffix); GitHub redirects preserve old URLs.
+- The npm package `name` SHOULD match the repo name. Counter-example on record:
+  repo `jeanmachuca-labs/qcobjects-jobs-template` publishes package
+  `qcobjects-jobs` (no keywords) — install-by-name still works, but discovery
+  and `--custom` auditing assume name parity, so keep them identical.
 
 ## CSS framework interoperability (normative)
 
@@ -59,15 +85,25 @@ The framework is CSS-agnostic: it ships plain CSS (SDK `src/css`, template
   source `.scss` files.
 - **Theme matrix:** every template ships `css/theme/{basic,cyan,redlight,xtra}`
   + `desktop/` + `mobile/` variants and `css/components/` per-component styles;
+  production apps MAY add themes (observed: `neumorphism` in the store app,
+  `job-detail` in the jobs template);
   new themes MUST follow the same directory shape. Switching themes MUST be a
   CSS swap only — no component or template changes.
+- **Auth-flow CSS kit:** multi-step auth UIs SHOULD group their styles as one
+  kit dir (reference: `css/theme/webflow-ui-kit/` with `signup`,
+  `forgot-password`, `reset-password`, `email-confirmation`, `third-party`
+  stylesheets) rather than scattering per-page CSS — the kit travels with the
+  auth templates as a unit.
 
 ## Configuration precedence (normative, from template README + CONFIG.md)
 
-1. Open `config.json` (or `config.yaml`/`config.yml`).
-2. If JSON **and** YAML both present → **YAML wins, JSON dismissed**.
-3. Field meanings per `CONFIG.md` (migrated in full to [12-schemas](./12-schemas.md)):
-   General (`devmode`: info|debug|warn|error; `autodiscover[_commands|_handlers]`;
+1. Open `config.json`. (The template also ships an identical `config.yaml`, but
+   the CLI runtime parses ONLY `config.json` — YAML is inert until a YAML
+   loader lands. Do not rely on YAML-wins.)
+2. Field meanings per `CONFIG.md` (migrated in full to [12-schemas](./12-schemas.md)):
+   General (`devmode`: info|debug|warn|error; `autodiscover[_libs|_commands|_handlers]`;
+   `domain` (default `$ENV(DOMAIN,localhost)`); `certificate_provider` (default
+   `$ENV(CERTIFICATE_PROVIDER,self_signed)`); `useTemplate` (SSR gate, default false);
    `documentRoot` e.g. `"$config(projectPath)public/"`; `documentRootFileIndex`;
    `cacheControl`; `relativeImportPath`; `serverPortHTTP/HTTPS`; `useLocalSDK`;
    `useLegacyHTTP`; `private-key-pem`/`private-cert-pem` e.g.

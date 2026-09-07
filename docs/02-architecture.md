@@ -128,9 +128,12 @@ Source: `src/BackendMicroservice.ts`, pinned at
 `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/BackendMicroservice.ts`.
 
 - **Construction:** `New(MicroserviceClass, {domain, basePath, body, stream, request})`;
-  the constructor stores all five, defaults `body` to `null`, runs `cors()`,
+  the constructor stores those five, defaults `body` to `null`, runs `cors()`,
   and wires dispatch. `stream`/`request`/`route`/`headers` stay available as
-  instance fields for the whole call.
+  instance fields for the whole call. NOTE: `cors()` runs unconditionally and
+  dereferences `this.route` — `route` is NOT a constructor param, so the harness
+  MUST set it (at minimum `responseHeaders`, plus `cors` for browser routes)
+  or construction throws `TypeError`.
 - **Verb dispatch:** stream `"data"` events route to `post(data)`; all other
   request methods dispatch to same-named methods — `get`, `head`, `put`,
   `delete`, `connect`, `options`, `trace`, `patch`. Override exactly the verbs
@@ -144,8 +147,92 @@ Source: `src/BackendMicroservice.ts`, pinned at
   `allow_methods` (default `GET, OPTIONS, POST`); `allow_headers` (default `*`).
   With no `route.cors` at all, validation is skipped (log only) — routes that
   need browsers MUST declare `cors`.
-- The `com.qcobjects.backend.microservice.static` built-in serves
+- The `com.qcobjects.backend.microservice.static` route name serves
   `redirect_to` file targets — use it for static routes instead of custom code.
+  (It is a route RECORD written by the CLI's `defaultsettings.ts`, not a class
+  in core — no such package exists in core `src/`.)
+
+## Secret-hiding proxy pattern (normative, reference: `qcobjects-openai-api`)
+
+Third-party APIs with secret keys MUST be integrated browser → same-origin
+proxy → vendor, never browser → vendor. The OpenAI/Azure packages prove the shape:
+
+- **Browser side:** a `Service` subclass (`ProxyOpenAIService`) POSTs to a
+  same-origin route (`/api/openai`, `external:false`, `cached:false`), carrying
+  only the model payload (`model`, `messages`, `temperature`) — NO key, NO
+  `Authorization` header.
+- **Server side:** a `BackendMicroservice.post()` builds the vendor client
+  service (key from `CONFIG.get("OPENAI_API_KEY")`, i.e. `$ENV(...)` resolved
+  only in Node), executes it via `serviceLoaderNode`, sets `this.body` to the
+  vendor response, and `done()`s. Errors become `this.body` + `done()` (fail
+  closed with a body, not a stream write).
+- **Rules:** vendor keys MUST live only in server-side `$ENV` settings;
+  browser code MUST NOT contain, import, or receive keys; proxy routes SHOULD
+  keep `cached:false`; streaming/SSE responses are NOT covered by this pattern
+  (request/response JSON only — verify before promising streams).
+
+## Service composition — BFF aggregation (normative, reference: store app)
+
+Beyond proxying, a microservice verb method MAY run one or more client `Service`
+subclasses through `serviceLoader` and reshape their responses into `body`
+(backend-for-frontend aggregation). Production proof (Printful catalog):
+
+- `Microservice.get()` instantiates `PrintfulService` (a `Service` subclass
+  whose `_new_` sets `Authorization: Basic <process.env KEY>` — `process.env`
+  exists only in Node, so the class is backend-only by construction),
+  `serviceLoader(New(PrintfulService,{data:null}))`, then
+  `microservice.body = JSON.parse(service.template)` + `done()`.
+- **Rules:** composing services MUST be `Service` subclasses (never raw
+  `https` calls — keeps headers, `done`/`fail`, and both transport legs);
+  secrets MUST come from `process.env`/`$ENV` (never literals, never client
+  reachable); each upstream failure MUST map to a `body` + `done()` (or a
+  deliberate non-200), never an unhandled rejection; aggregation of N
+  upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
+
+## Front-end vs back-end services (normative)
+
+- **Front-end service:** a `Service`/`JSONService` subclass consumed in the
+  browser — fetches data over HTTP (XHR leg of `serviceLoader`), binds the
+  response into templates via `{{}}`, and MUST NOT hold secrets (proxy instead).
+- **Back-end service:** a `Microservice extends BackendMicroservice` dispatched
+  from `backend.routes` by HTTP verb — runs in Node, answers with `this.body` +
+  `done()`, and MAY hold keys via `$ENV`/`process.env`. Think edge/cloud
+  function, but encapsulated in a class (verbs, `cors()`, `done()` protocol).
+- **Same classes, either side:** a `Service` subclass is isomorphic — the same
+  code runs in the browser or in Node (`serviceLoader` picks the transport leg
+  internally by `service.kind` + runtime: XHR, Node http/https/http2, `mockup`,
+  or `local`). Classify by WHERE it runs, not by what it extends.
+- The two meet ONLY at HTTP route boundaries (proxy + BFF patterns above).
+  Source: `src/serviceLoader.ts`, pinned at
+  `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/serviceLoader.ts`.
+
+## `serviceLoader` dispatch detail (normative)
+
+The single entry point `serviceLoader(service)` dispatches internally —
+callers never choose a transport. Source as above.
+
+- `kind:"rest"` + browser → XHR leg: async forced (sync XHR is deprecated),
+  custom `service.headers` applied in a loop (function values skipped),
+  `withCredentials` honored, status `200` → `done({request: xhr, service})`,
+  anything else → `fail({request: xhr, service})` when defined, else reject.
+- `kind:"rest"` + Node → built-in Node leg: `http`/`https` per URL protocol,
+  `http2` client when `service.useHTTP2` (with `:method`/`:path` pseudo-headers
+  merged from `service.options` + `service.headers`), chunk accumulation into
+  `service.template`, resolution with `{http2Client, request, service,
+  responseHeaders}`. Standalone `serviceLoaderNode` helpers (e.g. the OpenAI
+  package's native-https one) predate/parallel this leg and MUST keep its shape.
+- `kind:"mockup"` → calls `service.mockup(response)` (or `done`) with
+  `{request: null, service, responseHeaders}` — no network. The test-double
+  path: tests MUST use `mockup` services, never stub URLs.
+- `kind:"local"` → calls `service.local(response)` (or `done`) with the same
+  null-request shape — the embedded-data path.
+- Unknown kind → resolved no-op + debug line (never throws).
+- Rules: a service class holding secrets MUST run server-side only (gate on
+  `process.env` presence or keep it out of browser bundles); microservice
+  classes MUST NOT import browser globals (`document`, `window`, `location`);
+  new loaders MUST preserve the `{request, service}` shape; shared DTO shapes
+  SHOULD be documented once (in the route's spec entry) and referenced from
+  both sides.
 
 ## Backend routing contract (`config.json`)
 

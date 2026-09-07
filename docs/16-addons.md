@@ -44,16 +44,18 @@ without installing any add-on package:
 
 | Add-on | Role / keywords | Purpose | Status |
 |---|---|---|---|
-| [qcobjects-handler-hello-world](https://github.com/QCObjects/qcobjects-handler-hello-world) | handler (`qcobjects-handler`) | Minimal starter handler template (`v1.0.0`) — copy it to author a new handler | stable reference |
+| [qcobjects-handler-hello-world](https://github.com/QCObjects/qcobjects-handler-hello-world) | handler (`qcobjects-handler` + `qcobjects-api`; package `v1.0.0`, no git tags) | Minimal starter handler template — copy it to author a new handler | stable reference |
 | [qcobjects-handler-webpayplus](https://github.com/QCObjects/qcobjects-handler-webpayplus) | handler | Transbank WebPay Plus flow (`/checkout/webpay/init`, `/checkout/webpay/result`) | stable |
 | [qcobjects-handler-openapi](https://github.com/QCObjects/qcobjects-handler-openapi) | handler | Generic Open API request handler | stable |
 | [qcobjects-handler-contactform](https://github.com/QCObjects/qcobjects-handler-contactform) | handler | Contact-form endpoint (`/rest/contactform`) → email + Mailchimp subscriber notification | stable |
 | [qcobjects-handler-mockup](https://github.com/QCObjects/qcobjects-handler-mockup) | handler | Mock backend services for development/test | stable |
-| [qcobjects-admin](https://github.com/QCObjects/qcobjects-admin) | handler (`qcobjects-handler`, `v1.0.1`) | Admin panel for QCObjects apps. MUST be uninstalled before production deploys | stable, dev-only |
+| [qcobjects-admin](https://github.com/QCObjects/qcobjects-admin) | handler (`qcobjects-handler` + `qcobjects-api`, package `v1.0.1`) | Admin panel for QCObjects apps. MUST be uninstalled before production deploys | stable, dev-only |
 | [qcobjects-admin-lib-db-sqlite3](https://github.com/QCObjects/qcobjects-admin-lib-db-sqlite3) | admin storage (`qcobjects-admin-lib`) | SQLite3 backend for `qcobjects-admin` | stable |
 | [qcobjects-lib-cosmosdb](https://github.com/QCObjects/qcobjects-lib-cosmosdb) | data lib | Microsoft CosmosDB adapter; configures via `$ENV(...)` (the pattern that proved cloud-native readiness for the v3 roadmap) | stable |
 | [qcobjects-lib-sendemail](https://github.com/QCObjects/qcobjects-lib-sendemail) | data lib | Email sending via NodeMailer + Gmail (building block behind contact-form notifications) | stable |
 | [qcobjects-lib-mailchimp-api](https://github.com/QCObjects/qcobjects-lib-mailchimp-api) | data lib | Mailchimp list subscription via the official API (building block behind contact-form notifications) | stable |
+| [qcobjects-openai-api](https://github.com/QCObjects/qcobjects-openai-api) | AI proxy (`qcobjects-handler` + `qcobjects-api`, `v1.0.14`) | OpenAI chat-completions via the secret-hiding proxy pattern: browser `Service` → same-origin route → `BackendMicroservice` + `serviceLoaderNode` with server-side key. Ships browser UI component/controller + Node services + per-subpath `.cts/.mts/.ts` triplets | stable |
+| [qcobjects-azure-openai-api](https://github.com/QCObjects/qcobjects-azure-openai-api) | AI proxy (`qcobjects-handler` + `qcobjects-api`, `v1.0.22`) | Same proxy architecture against Azure OpenAI endpoints (sibling of `qcobjects-openai-api`) | stable |
 | [qcobjects-command-publish-static](https://github.com/QCObjects/qcobjects-command-publish-static) | command (`qcobjects-command`, `v1.0.4`) | **SUPERSEDED**: standalone `publish:static` command — now built-in to current `qcobjects-cli` (`src/cli-commands-publish-static.ts`). Do NOT install on new projects; kept for legacy CLI lines only | superseded |
 
 ## Rules (normative)
