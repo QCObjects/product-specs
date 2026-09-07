@@ -272,9 +272,13 @@ Components and services load over different transports by purpose. Sources:
   `"fetch" in top` (sync-XHR fallback otherwise). This is the local-preview /
   hybrid-app path — same feed pipeline after the text arrives.
 - **Services → one `serviceLoader`.** It dispatches internally on
-  `service.kind` + runtime: XHR in browsers, native http/https/http2 in Node,
-  `mockup`/`local` for test doubles and embedded data (no network). Callers
-  never choose a transport; every leg resolves the same
+  `service.kind` + runtime — callers never choose (full leg detail in
+  [02-architecture](./02-architecture.md) § `serviceLoader` dispatch detail):
+  XHR in browsers (async forced; headers loop skipping functions;
+  `withCredentials`; `200` → `done`, else `fail`/reject); native
+  http/https/http2 in Node (`useHTTP2` flag, chunk accumulation);
+  `mockup`/`local` legs run `service.mockup()`/`service.local()` with
+  `{request: null, …}` and no network. Every leg resolves the same
   `{request, service}` shape.
 - **Cache short-circuit:** cached GET components skip the network entirely via
   `ComplexStorageCache` (`alternate` path); non-GET always hits the network.

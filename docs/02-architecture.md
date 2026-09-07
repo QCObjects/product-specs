@@ -201,6 +201,34 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   Source: `src/serviceLoader.ts`, pinned at
   `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/serviceLoader.ts`.
 
+## `serviceLoader` dispatch detail (normative)
+
+The single entry point `serviceLoader(service)` dispatches internally —
+callers never choose a transport. Source as above.
+
+- `kind:"rest"` + browser → XHR leg: async forced (sync XHR is deprecated),
+  custom `service.headers` applied in a loop (function values skipped),
+  `withCredentials` honored, status `200` → `done({request: xhr, service})`,
+  anything else → `fail({request: xhr, service})` when defined, else reject.
+- `kind:"rest"` + Node → built-in Node leg: `http`/`https` per URL protocol,
+  `http2` client when `service.useHTTP2` (with `:method`/`:path` pseudo-headers
+  merged from `service.options` + `service.headers`), chunk accumulation into
+  `service.template`, resolution with `{http2Client, request, service,
+  responseHeaders}`. Standalone `serviceLoaderNode` helpers (e.g. the OpenAI
+  package's native-https one) predate/parallel this leg and MUST keep its shape.
+- `kind:"mockup"` → calls `service.mockup(response)` (or `done`) with
+  `{request: null, service, responseHeaders}` — no network. The test-double
+  path: tests MUST use `mockup` services, never stub URLs.
+- `kind:"local"` → calls `service.local(response)` (or `done`) with the same
+  null-request shape — the embedded-data path.
+- Unknown kind → resolved no-op + debug line (never throws).
+- Rules: a service class holding secrets MUST run server-side only (gate on
+  `process.env` presence or keep it out of browser bundles); microservice
+  classes MUST NOT import browser globals (`document`, `window`, `location`);
+  new loaders MUST preserve the `{request, service}` shape; shared DTO shapes
+  SHOULD be documented once (in the route's spec entry) and referenced from
+  both sides.
+
 ## Backend routing contract (`config.json`)
 
 - Every route REQUIRES `path` + `microservice` (package string as indexing point).
