@@ -20,25 +20,29 @@ As produced by `qcobjects create` / `src/templates/*` and exemplified by
 
 ```
 myapp/
-  config.json          # runtime truth: domain, ports, routes, paths ($ENV/$config)
-  config.yaml          # MAY exist; if both JSON+YAML present, YAML wins (dismiss JSON)
+  config.json          # runtime truth: domain, ports, routes, paths ($ENV/$config).
+                       # NOTE: the CLI loads ONLY config.json — a shipped
+                       # config.yaml is inert (see § Production patterns)
   package.json         # scripts below; main public/js/init.js
-  backend/             # microservice packages live here
+  backend/app.js       # one-line entry: require("qcobjects-cli/qcobjects-http2-server")
   src/
     index.html         # shell: <script type="module" src="js/init.js">
     404.html  robots.txt  humans.txt  manifest.json  sw.js  favicon.ico
-    css/               # components/hero, desktop/, mobile/, theme/{basic,cyan,redlight,xtra}
-    img/               # icons/, screenshots/
+    css/               # flat component files (button.css, card.css, modal.css),
+                       # desktop/, mobile/, theme/{basic,cyan,redlight,xtra}
+    img/               # icons/ (no screenshots/ dir in template)
     js/
       config.ts        # CONFIG settings binding
       init.ts          # boot sequence (Init component)
       customWidgets.ts # app widgets registration (RegisterWidget calls)
-      packages/        # Package() namespaces: org.myapp.*
-        # per-layer split: <org>.<app>.{components,controllers,effects,models,views}.js
-        # + installer.js + thirdparty/libs vendored under packages/thirdparty/libs/<lib>/
-      res/               # hybrid-mobile assets (icons, .pgbomit) when packaging via PhoneGap/Cordova
+      packages/        # .ts Package() namespaces:
+                       # com.qcobjects.services.*, com.qcobjects.installer,
+                       # org.<app>.{components,controllers,effects,models,views}
+                       # (third-party libs MAY be vendored under
+                       # packages/thirdparty/libs/<lib>/ + SourceJS chain —
+                       # observed in reference apps, absent from template)
     templates/
-      components/      # hero/, pages/
+      components/      # hero/ lives HERE (*.tpl.html), not under css/
   public/              # build output only (parcel/esbuild distDir)
   spec/ + support/     # jasmine specs mirroring src/
 ```
@@ -58,11 +62,13 @@ CONFIG.set("componentsBasePath", "templates/components/");
 CONFIG.set("delayForReady", 1);          // wait before first ready (incl. imports)
 CONFIG.set("preserveComponentBodyTag", false);
 CONFIG.set("useConfigService", false);   // true => load settings from config.json
-CONFIG.set("routingWay","hash");         // 'hash' | 'pathname' | 'search'
+CONFIG.set("routingWay","pathname");     // 'hash' | 'pathname' | 'search' (template default: pathname)
 CONFIG.set("useLocalSDK",true);          // local SDK vs sdk.qcobjects.dev
 CONFIG.set("tplextension","tpl.html");   // main => main.tpl.html
 CONFIG.set("asynchronousImportsLoad",true);
 CONFIG.set("serviceWorkerURI","/sw.js"); // auto-registered for offline
+CONFIG.set("overrideComponentTag",true); // load-bearing for template resolution
+Component.cached = true;                 // template-level caching default
 ```
 
 ## The 5 coding steps (normative tutorial contract)
@@ -81,27 +87,42 @@ CONFIG.set("serviceWorkerURI","/sw.js"); // auto-registered for offline
 Every generated source file MUST carry the license header (LGPLv3 text on the
 v2.x line; MIT on v3.0+ — see [09-license](./09-license.md)).
 
-## npm scripts contract (normative)
+## npm scripts contract (normative — as shipped in the template)
 
 Every app `package.json` MUST provide: `test` (eslint+jasmine),
 `lint`, `sync` (`git add . && git commit -am`), `preversion` (`npm i --upgrade`
-+ test), `postversion` (`git push && git push --tags`), `coverage` (nyc),
++ test), `postversion` (`git push && git push --tags` — NOTE: full push, unlike
+the CLI's branch-only rule in [08-ci-conventions](./08-ci-conventions.md)),
+`coverage` (nyc),
 `start` (`createcert` + `serve`), `serve`/`server` (`qcobjects-server`),
-`start:dev` (watch build+serve), `collab` (`qcobjects-collab`), `shell`,
+`start:dev` (watch build+serve), `collab` (`qcobjects-collab`),
+`shell` (runs `qcobjects shell` — NOTE: no such CLI subcommand exists; the
+working entrypoint is the `qcobjects-shell` BINARY),
 `createcert`, `v-patch|v-minor|v-major`, `qcobjects` (local CLI),
-`http-server` (local test), `gae-server` (App Engine), `build`/`build:ts`
-(TypeScript), `publish:local`, `prepare` (husky).
+`http-server` (local test), `gae-server` (App Engine), `build`
+(= `publish:web`, the full chain below — NOT a bare TS step) / `build:ts`
+(`npm test && npx tsc`), `prepare` (husky).
+(No `publish:local` script exists — use `publish:web` / `publish:static`.)
 
 ## Environment & deploy (normative)
 
-`.env` (never committed; `.env.example` committed) MUST define:
+`.env` (never committed) SHOULD be accompanied by a committed `.env.example`
+defining:
 `ENGINE_NAME` (e.g. `sqlite3`), `DATABASE_NAME` (e.g. `admin.db`),
-`DEFAULT_USER`, `DEFAULT_PASSWORD`, `MICROSOFT_API_KEY`, `GOOGLE_API_KEY`.
+`DEFAULT_USER`, `DEFAULT_PASSWORD`, `MICROSOFT_API_KEY`, `GOOGLE_API_KEY`
+(the `$ENV(…)` names above match the template `config.json`; the template
+ships NO `.env*` file itself — add the example per app).
 Netlify one-click deploy supported; live demo at `https://newapp.qcobjects.dev`;
 Docker: `docker run -p 8080:8080 -p 8443:8443 qcobjects/qcobjects-newapp`
 → `https://127.0.0.1:8443/`.
 
-## Production patterns (normative, reference: production app `v2.4` line)
+## Production patterns (reference — observed in production apps, NOT in the pinned template)
+
+The items below describe patterns proven in production reference apps
+(`v2.4`-line commercial apps, jobs template). They are ADOPTABLE, not template
+contract — the pinned `v2.4.40-ts` template contains NONE of: `config-debug.json`,
+`config-prod.json`, `app.yaml`, `qcobjects.service`, `src/templates/email/`,
+seed CSV/JSON pairs (only `Dockerfile`, `docker-compose.yml`, `src/_redirects` overlap).
 
 - **Multi-env configs:** apps MAY ship `config.json` + `config-debug.json` +
   `config-prod.json` variants (same shape, different `$ENV` bindings/ports);
@@ -116,8 +137,9 @@ Docker: `docker run -p 8080:8080 -p 8443:8443 qcobjects/qcobjects-newapp`
   drifting from its CSV.
 - **Web publish chain:** production `publish:web` runs staged —
   `build:static` (copy `src/` → `build/`) → `build:ts` (test + `tsc`) →
-  `publish:static` (`build/` → `public/`, excluding `js`) → `publish:esbuild`
-  (bundle to `public/js`) → `minify:css`. `prestart` SHOULD run the publish
+  `publish:static` (`build/` → `public/`, excluding `js`, with `minify:css`
+  nested inside) → `publish:esbuild` (bundle to `public/js`) →
+  `generate-sw` (terminal stage). `prestart` SHOULD run the publish
   chain so servers never boot stale artifacts.
 - **Deploy targets:** beyond Netlify/Docker — `app.yaml` (App Engine,
   `gae-server`), `qcobjects.service` (systemd unit), `Dockerfile` +
@@ -135,7 +157,7 @@ Docker: `docker run -p 8080:8080 -p 8443:8443 qcobjects/qcobjects-newapp`
 - **Quality gates:** `lighthouse` script with budgets SHOULD run against the
   local TLS server before release; `spec/` + `coverage/` MUST stay green.
 
-## Electron desktop shell (normative, references: `qcobjects-electron` line)
+## Electron desktop shell (reference: `qcobjects-electron` line)
 
 Desktop apps wrap the same web tree in an Electron shell — three files at the
 app root plus packaging metadata:
