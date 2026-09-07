@@ -184,6 +184,31 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
 
+## Front-end vs back-end services (normative)
+
+Two different classes, two runtimes, one contract shape:
+
+| | Front-end (`Service`/`JSONService`) | Back-end (`BackendMicroservice`) |
+|---|---|---|
+| Where it runs | Browser, via XHR `serviceLoader` (or Node via `serviceLoaderNode`) | CLI server, dispatched from `backend.routes` |
+| Definition | `Class('X',Service\|JSONService,{name,url,method,…})` | `Class('Microservice',BackendMicroservice,{get/post/…})` in a route package |
+| Trigger | Component/controller calls `serviceLoader(New(X))` | HTTP verb on the route path |
+| Input | `service.data` (bound params) | Request stream data / route params |
+| Output | `service.template` + `JSONresponse`, `done`/`fail` | `this.body` + `done()` |
+| Secrets | MUST NOT hold keys (proxy instead) | MAY hold keys via `$ENV`/`process.env` |
+| Response as UI | Binds `{{}}` into templates directly | Never touches DOM — returns data/envelopes |
+
+- The two sides meet ONLY at HTTP route boundaries (proxy + BFF patterns
+  above) sharing the `{request, service|component}` standard-response shape —
+  see [03-core-framework](./03-core-framework.md) §§ Services, Loading transport.
+- A `Service` subclass executed via `serviceLoaderNode` inside a microservice
+  verb method is still a FRONT-end class reused server-side (Printful proof) —
+  classify by definition site, not execution site.
+- Rules: front-end services MUST NOT embed secrets or absolute vendor URLs
+  (same-origin proxy paths only); back-end services MUST NOT import browser
+  globals (`document`, `window`, `location`); shared DTO shapes SHOULD be
+  documented once (in the route's spec entry) and referenced from both sides.
+
 ## Backend routing contract (`config.json`)
 
 - Every route REQUIRES `path` + `microservice` (package string as indexing point).
