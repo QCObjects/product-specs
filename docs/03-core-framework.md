@@ -205,6 +205,27 @@ let SERVICE_HOST = function (arg){
 Processor.setProcessor(SERVICE_HOST); // enables "$SERVICE_HOST(SERVICE_URL)"
 ```
 
+Minimal complete recipe (declare in JSON, define, register — non-arrow so
+`this` is the handler):
+
+```json
+{ "foo": "$meta_processor(value)", "num": 10 }
+```
+```javascript
+function meta_processor(value){ /* works against the passed param */ }
+Processor.setProcessor(meta_processor);
+```
+
+Multiple params arrive positionally (spread contract):
+
+```json
+{ "api": "$MAILCHIMP_API(MAILCHIMP_API_KEY,MAILCHIMP_API_SERVER,MAILCHIMP_API_LIST)" }
+```
+```javascript
+function MAILCHIMP_API(keyVar, serverVar, listVar){ /* one param per arg */ }
+Processor.setProcessor(MAILCHIMP_API);
+```
+
 ## Template meta processors `$…(…)` (normative)
 
 Separate from CONFIG processors: `$name(args)` placeholders inside component
