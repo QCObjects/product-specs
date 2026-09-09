@@ -61,6 +61,21 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
   MAY carry `description`, `redirect_to`, `responseHeaders`, `cors.allow_origins`,
   and a sibling `headers` key (used by real template routes, distinct from
   `responseHeaders`).
+- `backend.interceptors[]` — server-lifecycle plugins, loaded by all three
+  servers at boot: each entry imports its `microservice` package, instantiates
+  `<microservice>.Interceptor` with `{domain, basePath, projectPath,
+  interceptor, server}` (note the live SERVER handle — this is how socket.io
+  and similar layers attach), and pushes the instance to
+  `interceptorInstances`. Entries carry `name`, `description`, `microservice`,
+  `responseHeaders` (proof: video-streaming `Start Streaming` entry).
+- **Unknown keys pass through inert — with one verified exception.** `config.json`
+  MAY carry app-private keys (e.g. top-level `iceServers` for WebRTC STUN);
+  `CONFIG.get` serves any key, but the server acts ONLY on keys it reads.
+  The exception: route-level `supported_methods` IS consumed — by the static
+  microservice (`src/backend/backend-microservice-static.ts`), which allows
+  delivery only when the request method is `"*"`-matched or case-insensitively
+  listed (absent = allowed). Do NOT assume any OTHER unknown key takes effect;
+  verify the read site first.
 - `package{source{backend,frontend}, build, dist}` for packaged builds.
 
 ## Placeholder resolution (normative)
