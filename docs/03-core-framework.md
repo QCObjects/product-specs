@@ -56,6 +56,16 @@ Build/test detail: [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)
 - `Package(name, [classes])` defines and registers; a bare `Package(name)` call
   with no classes throws (retrieval is synchronous `ClassFactory(name)`, which
   throws when the name is missing).
+- **Shortcut aliases (npm interop):** `Package()` RETURNS the registered class
+  array, and accepts any non-empty array — so packages nest:
+  `Package("myfeature", Package("com.mydomain.feature", [MyFeatureClass1,
+  MyFeatureClass2]))` registers both classes under the canonical namespace AND
+  re-registers each under the `myfeature` shortcut. Both
+  `ClassFactory("com.mydomain.feature.MyFeatureClass1")` and
+  `ClassFactory("myfeature.MyFeatureClass1")` resolve (last-wins scope rules
+  apply per name independently). npm packages SHOULD expose one short alias for
+  their canonical namespace this way so consumers `Import` the short name while
+  definitions keep their fully-qualified identity.
 - `Import('dotted.package'[, ready][, external])` loads `<package>.js` from
   `relativeImportPath` (or `remoteImportsPath` when external); `.js` extension
   is mandatory and unchangeable (security).
