@@ -227,6 +227,13 @@ WebSocket/socket.io realtime runs ALONGSIDE the verb dispatch, not through it:
 - The two meet ONLY at HTTP route boundaries (proxy + BFF patterns above).
   Source: `src/serviceLoader.ts`, pinned at
   `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/serviceLoader.ts`.
+- **Namespace convention (reference: hacktoberfest app):** keep the sides
+  visibly apart — backend microservices under `<org>.backend.*`
+  (`org.quickcorp.backend.projectlist`, `…signup`), browser client services
+  under `<org>.frontend.services` (`ProjectListClientService`,
+  `SignupClientService` hitting `Service.basePath + route`). Same-route pairs
+  SHOULD share the leaf name (`signup` ↔ `signup`) so routes, services, and
+  templates trace to each other by inspection.
 
 ## `serviceLoader` dispatch detail (normative)
 
