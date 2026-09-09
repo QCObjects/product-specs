@@ -302,6 +302,25 @@ it; text formats work natively).
 <component name="main"></component>  <!-- loads ./templates/main[.tplextension] -->
 ```
 
+Minimal complete component (native class + inline template + widget shell):
+
+```javascript
+Package("com.qcobjects", [
+  class Main extends Component {
+    name = "main"
+    tplsource = "inline"
+    template = `hello {{foo}}!`
+    data = { foo: "world" }
+  }
+])
+RegisterWidget("main-widget")
+```
+```html
+<main-widget componentClass="Main"></main-widget>
+```
+`componentClass` takes the bare class name (resolved via `ClassFactory`);
+`data.foo` binds `{{foo}}`; no external template file needed.
+
 **Loaders:** `componentLoader(instance, load_async)` → Promise
 (`successStandardResponse{request, component}` / `failStandardResponse{component}`);
 instance `__buildSubComponents__(true)` (or exported `buildComponents(element)`)
