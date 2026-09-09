@@ -205,6 +205,17 @@ let SERVICE_HOST = function (arg){
 Processor.setProcessor(SERVICE_HOST); // enables "$SERVICE_HOST(SERVICE_URL)"
 ```
 
+Minimal complete recipe (declare in JSON, define, register — non-arrow so
+`this` is the handler):
+
+```json
+{ "foo": "$meta_processor(value)", "num": 10 }
+```
+```javascript
+function meta_processor(value){ /* works against the passed param */ }
+Processor.setProcessor(meta_processor);
+```
+
 ## Template meta processors `$…(…)` (normative)
 
 Separate from CONFIG processors: `$name(args)` placeholders inside component
