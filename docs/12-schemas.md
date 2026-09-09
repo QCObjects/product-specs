@@ -65,7 +65,18 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
 - `backend.routes[]` — each REQUIRES `name`, `path` (regex), `microservice`;
   MAY carry `description`, `redirect_to`, `responseHeaders`, `cors.allow_origins`,
   and a sibling `headers` key (used by real template routes, distinct from
-  `responseHeaders`).
+  `responseHeaders`). Route keys fall in two tiers:
+  - VERIFIED (read site in pinned source): all of the above + `supported_methods`
+    (static microservice gating).
+  - OBSERVED, read site in external packages (do NOT rely on framework
+    behavior; verify against the handler that owns the route): `entity`
+    (generic register/list microservices dispatching per entity value),
+    `response` (inline body served by mockup-style microservices, e.g. OAuth2
+    token stub), `proxyServiceClass` + `proxy_methods` (proxy microservices
+    delegating to a named Service class), route-level `method` (verb constraint
+    on `/saveplayer`-style routes), and microservice names with no pinned-source
+    implementation (`mockup`, `proxy`, `sdk.forbidden` for deny rules like
+    `^/node_modules.*$`, `openapi.json|yaml`, `helloworld`, PHP bridges).
 - `backend.interceptors[]` — server-lifecycle plugins, loaded by all three
   servers at boot: each entry imports its `microservice` package, instantiates
   `<microservice>.Interceptor` with `{domain, basePath, projectPath,
@@ -95,6 +106,17 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
 - Custom `$NAME(args)` via `Processor.setProcessor(fn)` (non-arrow; `this` is
   the handler; reach `$ENV` as `this.processors.ENV(arg)`).
 - Encrypted `config.json` supported; decoding transparent to `CONFIG.get`.
+- **Inline i18n dictionary:** `use_i18n:true` + `lang` + `i18n.messages[]`
+  (`{en,es}` pairs) embeds translations directly in config — read by core
+  (`Component.ts` gates on `CONFIG.get("use_i18n")`). Prefer for small static
+  dictionaries; the SDK `i18n_messages` packages remain the mechanism for
+  large/dynamic catalogues.
+- **Namespaced custom blocks are the norm for app-private settings:**
+  `stripe{…}`, `firebaseclient{…}`, `jira{domain,username,auth_token,project}`,
+  `frontend{credentials{…}}`, `backend.credentials{…}`, `puzzleTimeoutSeconds`,
+  `backendTimeout` — any shape, served by `CONFIG.get`, never interpreted by
+  the framework. Secrets inside them MUST still come from `$ENV(...)`, never
+  literals (see security note in Verification).
 
 ## `package.json` contract (normative)
 
@@ -116,3 +138,7 @@ major and document migration in the spec + changelog.
 - A `filename` with multiple dots (e.g. `my.page.html`) is misclassified by
   `file_extension()` (first-dot, not last) — keep template basenames single-dot.
 - `CONFIG.md` field list ⊆ this catalogue (this spec is the superset of record).
+- ⚠️ SECURITY: never commit literal secrets in `config.json` (passwords, API
+  keys, tokens) and never paste real configs into chats/logs — all secrets
+  belong behind `$ENV(...)`, including reference-looking examples, which MUST
+  be rotated before any production use.
