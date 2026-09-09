@@ -100,7 +100,17 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
   (`<layout-basic splashscreen name="main" cached=true ...>` in widget syntax).
 - **SplashScreenComponent** — base splash (extended by video + cube variants).
 - **CubeSplashScreenComponent** — 3D spinning-cube splash (shadowed, inline
-  template with `spin` keyframes).
+  template with `spin` keyframes). Attributes: `duration` (example `"3000"`),
+  `data-background` (any CSS background — gradients work,
+  `linear-gradient(…)`), `data-cube_image` (face texture URL, bound to
+  `--background-3d-cube-image`):
+  ```html
+  <splash-screen componentClass="CubeSplashScreenComponent"
+      duration="3000"
+      data-background="linear-gradient(90deg, rgba(2,0,36,1) 0%, …)"
+      data-cube_image="./img/Q_web-white.png">
+  </splash-screen>
+  ```
 - **NotificationComponent** — notification shell. Drift note: registered under
   the legacy `org.quickcorp.components.notifications` package (the i18n loader
   also references an `org.quickcorp.*` namespace); rename to `org.qcobjects.*`
