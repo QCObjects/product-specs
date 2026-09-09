@@ -570,6 +570,12 @@ pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/TransitionEf
   Durations SHOULD come from config (e.g. `puzzleTimeoutSeconds`), never literals.
 - `_Crypt`: `New(_Crypt,{string,key})._encrypt()/._decrypt()`, or static
   `_Crypt.encrypt(text,key)` / `_Crypt.decrypt(cipher,key)`.
+- `shortCode()` (alias `uniqueId`) — one-shot unique token: encrypts two random
+  values under time-based keys and joins the differing chars. Batch idiom
+  (10 tokens, one line — `range` is inclusive so `range(9)` yields 10):
+  `let tokens = range(9).map(() => shortCode())`.
+  Tokens are uniqueness-graded, NOT cryptographic secrets — for sessions/keys
+  use `_Crypt` with explicit passphrases, never `shortCode()` output.
 - `ComplexStorageCache({index, load, alternate})` + `getCached(id)` for
   localStorage object caching.
 - `asyncLoad(fn, args)` runs once after the async queue, before Ready.
