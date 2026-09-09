@@ -542,8 +542,14 @@ pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/TransitionEf
 - `Timer.thread({duration, timing(fraction,elapsed), intervalInterceptor(progress)})`
   emulates threads (modern browsers only). `Timer.alive` is the master
   kill-switch (static, default `true`; the frame loop checks it) — countdowns
-  and loops MUST observe it, and teardown MUST set `Timer.alive = false`
-  (reference: countdown app).
+  and loops MUST observe it, and teardown MUST set `Timer.alive = false`.
+  Canonical controller pattern (reference: puzzle-game `TimerController`):
+  register the controller in `global` (`global.set("timerGameController",…)`),
+  `start()` sets `alive=true` and threads `{duration: component.duration, …}`
+  with per-frame UI writes in `timing` and completion gating in
+  `intervalInterceptor` (`progress==100` → game-over flow → `stop()`);
+  cross-controller coordination goes through `global.get("puzzleController")`.
+  Durations SHOULD come from config (e.g. `puzzleTimeoutSeconds`), never literals.
 - `_Crypt`: `New(_Crypt,{string,key})._encrypt()/._decrypt()`, or static
   `_Crypt.encrypt(text,key)` / `_Crypt.decrypt(cipher,key)`.
 - `ComplexStorageCache({index, load, alternate})` + `getCached(id)` for
