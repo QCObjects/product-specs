@@ -153,6 +153,18 @@ Calling form matters — static-only vs instance-only is per class:
   degrees 0–360), `Radius`, `Resize` (1 = normal), `WipeLeft/Right/Up/Down`.
 - Batch via `Tag(...).map(el => X.apply(el, …))` for static classes,
   `Tag(...).map(el => (new X()).apply(el, …))` for instance classes.
+- **Effects-dispatch pattern (reference: effects demo app):** expose an
+  `effects: {apply<Name>(el){…}}` map on the controller plus an
+  `applyEffect(name)` dispatcher (`this.effects["apply"+name](el)`); generate
+  trigger buttons with a custom meta processor emitting BOTH `ontouchstart`
+  and `onclick` handlers (touch-first devices); register the controller in
+  `global` (`global.set("mainControllerInstance", this)` in `done()`) so
+  generated markup can reach it. Composed moves (slide/fall/rise) chain static
+  `Move.apply` calls with measured offsets (`clientWidth`/`clientHeight`);
+  rotates SHOULD set `transformOrigin` first.
+- **SVG templates:** `tplextension` accepts any extension — `tplextension="svg"`
+  loads vector templates through the same pipeline (reference: clickable
+  octocat component).
 
 Modal presets (`org.qcobjects.modal.effects` — a REGISTERED package,
 importable via `ClassFactory("org.qcobjects.modal.effects.ModalFade")`;
