@@ -435,6 +435,13 @@ component, which is the framework's other-framework-interop seam. Sources:
   that need it (e.g. a React-rendered subtree, Mustache/Handlebars templates).
   Handler choice is per-component, so hybrid apps MUST document which components
   use non-default handlers and their syntax.
+- **Canonical example — Markdown docs site (reference: docs website):**
+  `templateHandler = "MarkdownTemplateHandler"` (a plain registered class NAME
+  string, resolved via `ClassFactory`) on `MarkdownComponent` renders `.md`
+  templates; a `generateDoc.js` build step splits `README.md` by heading levels
+  into `templates/components/markdown/<lang>/page_*.md` files AND emits the
+  matching `<routing path="^/<slug>$" name="markdown/…">` entries into a
+  section shell — documentation-as-routed-components, fully generated.
 
 ## Services (normative)
 
