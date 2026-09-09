@@ -7,6 +7,8 @@ This repo is the source of truth for framework, SDK, CLI, app structure, and the
 
 - `docs/` — one Markdown file per product foundation (nav in `mkdocs.yml`)
   + `docs/index.md` (site home), `docs/requirements.txt` (MkDocs deps)
+  + `docs/examples/` — full snippet pages extracted from `svg-code-examples/`
+    (nav `Examples` section; one page per animation source)
 - `schemas/` — JSON Schemas + `schemas/examples/*.json` fixtures (CI-validated)
 - `diagrams/` — Mermaid sources (`.mmd`) + rendered SVGs
 - `mkdocs.yml` — MkDocs Material site config (`strict: true`)
