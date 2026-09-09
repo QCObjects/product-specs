@@ -188,6 +188,13 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   reachable); each upstream failure MUST map to a `body` + `done()` (or a
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
+- **File-sink microservices:** persistence without a database — `post(data)`
+  appends timestamped JSON under a records dir
+  (`projectPath + "/records/record" + Date.now() + ".json"` via `fs.writeFile`,
+  reference: puzzle-game `saveplayer`). File sinks MUST scope writes to a
+  dedicated records dir (never the document root), MUST derive filenames from
+  timestamp + validated fields (never raw client input — path traversal), and
+  SHOULD answer a JSON-RPC envelope via `done()`.
 
 ## Realtime signaling coexistence (normative, reference: video-streaming app)
 
