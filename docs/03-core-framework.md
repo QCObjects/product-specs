@@ -167,6 +167,9 @@ a function whose source starts with `class`), pinned at
   freely in one package.
 - New code SHOULD prefer native `class`/`extends` syntax; the `Class()` factory
   remains supported for cross-browser legacy paths and dynamic definitions.
+- `new` vs `New()` is PARITY, not preference: native `new` for standard
+  construction; `New()` when you want its undefined-safety (`New(undefined)` →
+  `new Object()`) and single-arg defaults. Use either consistently per file.
 
 ## CONFIG & processors (normative)
 
