@@ -21,6 +21,11 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
    A shipped `config.yaml` is INERT until a YAML loader lands; since the
    template ships both files with identical content, JSON silently governs.
 2. `CONFIG.set('useConfigService',true)` (or equivalent) enables file-backed settings.
+3. Config files are STANDALONE — no overlay/merging mechanism exists. Minimal
+   configs (`{"autodiscover":true}`, `{"documentRoot":"…browser/"}`) are valid;
+   absent keys fall back to built-ins (`documentRoot` → `<cwd>/public`,
+   ports/TLS required only when serving). The schema accordingly requires
+   NOTHING — every key is optional with documented fallbacks.
 
 ## General fields (normative catalogue)
 
