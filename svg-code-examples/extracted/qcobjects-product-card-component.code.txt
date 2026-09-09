@@ -1,0 +1,7 @@
+Package("org.quickcorp.custom.components",[
+  Class("ProductCardComponent",Component,{
+    name:"product-card",
+    shadowed: true,
+    cached:false
+  })
+]);

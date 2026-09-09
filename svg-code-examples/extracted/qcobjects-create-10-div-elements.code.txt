@@ -1,0 +1,9 @@
+x
+range(9).map(index => New(
+  Component,{
+    name:`component-${index}`,
+    template:`This is the component element number ${index}`,
+    tplsource:"inline",
+    body:_DOMCreateElement("div")
+  }
+)).map(e=>document.body.append(e))
