@@ -36,6 +36,12 @@ qcobjects v-changelog > CHANGELOG.md                            # release notes 
 - When [15-unified-vision-v3](./15-unified-vision-v3.md) conflicts with an older
   spec, the PR MUST update the older spec in the same chain — never ship code
   against a stale spec.
+- **Periodic accuracy audit (quarterly):** link-check and builds catch rot, not
+  drift — every quarter, re-verify each spec's normative claims against the
+  pinned source tags (class/param/flag/default level, as in the inaugural
+  audit that fixed ~60 items). Audit findings land as a `fix/accuracy-audit`
+  PR; verified code bugs found this way are filed upstream with file:line
+  evidence instead of being silently spec'd around.
 
 ## Verification
 
