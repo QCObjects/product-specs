@@ -189,6 +189,21 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
 
+## Realtime signaling coexistence (normative, reference: video-streaming app)
+
+WebSocket/socket.io realtime runs ALONGSIDE the verb dispatch, not through it:
+
+- A microservice method attaches the socket layer to `microservice.server`
+  (production proof: `require("socket.io")(microservice.server)` with
+  `broadcaster`/`watcher`/`offer`/`answer` relay events for WebRTC signaling).
+  Verb stubs on the same class MAY no-op (`done()` immediately) — their job is
+  route presence; media flows peer-to-peer, the server relays signals only.
+- Signaling state MAY use `global` (`global.set("broadcaster", socket.id)`),
+  but MUST be treated as ephemeral (no persistence, no cross-instance
+  assumptions — sticky sessions or external store required past one process).
+- Socket dependencies (`socket.io` npm package) belong to the app/handler
+  package, never to core; the HTTP server MUST NOT depend on socket code paths.
+
 ## Front-end vs back-end services (normative)
 
 - **Front-end service:** a `Service`/`JSONService` subclass consumed in the

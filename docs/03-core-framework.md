@@ -537,7 +537,10 @@ pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/TransitionEf
   `load` for above-fold entrances; custom transitions MUST extend
   `TransitionEffect` (not raw `Effect`) to participate in this protocol.
 - `Timer.thread({duration, timing(fraction,elapsed), intervalInterceptor(progress)})`
-  emulates threads (modern browsers only).
+  emulates threads (modern browsers only). `Timer.alive` is the master
+  kill-switch (static, default `true`; the frame loop checks it) — countdowns
+  and loops MUST observe it, and teardown MUST set `Timer.alive = false`
+  (reference: countdown app).
 - `_Crypt`: `New(_Crypt,{string,key})._encrypt()/._decrypt()`, or static
   `_Crypt.encrypt(text,key)` / `_Crypt.decrypt(cipher,key)`.
 - `ComplexStorageCache({index, load, alternate})` + `getCached(id)` for
