@@ -274,7 +274,8 @@ builder runs from construction and the route flow).
 `data-*` one-way mock bindings (NOT bidirectional); `controllerClass`;
 `viewClass`; `componentClass`; `effectClass`; `template-source` (passed through
 as-is — `default`|`none`|`inline`|`external`);
-`tplextension` (default `html`).
+`tplextension` (default `html`; free-form — any extension, handler must support
+it; text formats work natively).
 
 ```html
 <component name="main"></component>  <!-- loads ./templates/main[.tplextension] -->

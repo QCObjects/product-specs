@@ -162,9 +162,11 @@ Calling form matters — static-only vs instance-only is per class:
   generated markup can reach it. Composed moves (slide/fall/rise) chain static
   `Move.apply` calls with measured offsets (`clientWidth`/`clientHeight`);
   rotates SHOULD set `transformOrigin` first.
-- **SVG templates:** `tplextension` accepts any extension — `tplextension="svg"`
-  loads vector templates through the same pipeline (reference: clickable
-  octocat component).
+- **`tplextension` is free-form:** any extension value works
+  (`<name>.<tplextension>`) — the TEMPLATE HANDLER class must support it.
+  Text formats are natively supported (`svg`, `md`, `txt` — reference: clickable
+  octocat via `tplextension="svg"`); non-text formats REQUIRE a custom handler
+  that parses them (see [03-core-framework](./03-core-framework.md) § Template handlers).
 
 Modal presets (`org.qcobjects.modal.effects` — a REGISTERED package,
 importable via `ClassFactory("org.qcobjects.modal.effects.ModalFade")`;
