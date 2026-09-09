@@ -53,7 +53,9 @@
           "properties": {
             "enabled": { "type": "boolean" },
             "defaultUser": { "type": "string" },
-            "defaultPasswd": { "type": "string" }
+            "defaultPasswd": { "type": "string" },
+            "microsoftapikey": { "type": "string" },
+            "googleapikey": { "type": "string" }
           }
         },
         "routes": {
@@ -68,12 +70,26 @@
               "microservice": { "type": "string" },
               "redirect_to": { "type": "string" },
               "responseHeaders": { "type": "object" },
+              "headers": { "type": "object" },
               "cors": {
                 "type": "object",
                 "properties": {
                   "allow_origins": { "type": "string" }
                 }
               }
+            }
+          }
+        },
+        "interceptors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "microservice"],
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "microservice": { "type": "string" },
+              "responseHeaders": { "type": "object" }
             }
           }
         }
