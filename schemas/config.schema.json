@@ -24,6 +24,20 @@
     "enableShellCommands": { "type": "boolean", "default": false },
     "private-key-pem": { "type": "string" },
     "private-cert-pem": { "type": "string" },
+    "package": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "backend": { "type": "string" },
+            "frontend": { "type": "string" }
+          }
+        },
+        "build": { "type": "string" },
+        "dist": { "type": "string" }
+      }
+    },
     "backend": {
       "type": "object",
       "properties": {
