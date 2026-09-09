@@ -57,6 +57,9 @@ Features across core, SDK, CLI, templates. Status: `stable`, `beta`,
   (`cdn.jsdelivr.net/npm/qcobjects/QCObjects[.min].js`) · UNPKG
   (`unpkg.com/qcobjects@latest/QCObjects.js`) · CDNJS
   (`cdnjs.../qcobjects/[VERSION]/QCObjects[.min].js`).
+  ESM form supported: `<script type="module">import
+  "https://cdn.qcobjects.dev/QCObjects.js"</script>` (reference: effects demo).
+  `useSDK:true` + `useLocalSDK:false` loads the SDK remote instead of vendored.
 - **Docker:** `quickcorp/qcobjects-playground` (playground) ·
   `qcobjects/qcobjects-newapp` (app, ports 8080/8443).
 - **One-step scripts:** Ubuntu 18.x / RHEL8 / Raspbian 9 / macOS installers from
