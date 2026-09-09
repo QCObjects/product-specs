@@ -1,0 +1,1 @@
+npm i --save-dev qcobjects-cli && npm i --save qcobjects qcobjects-sdk

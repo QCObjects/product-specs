@@ -1,0 +1,10 @@
+<!-- QCObjects Nav Component Template Example -->
+<span class="closebtn" onclick="global.sideNavController.toggle()"></span>
+<div class="navcontent">
+<details>
+    <summary>Side Menu</summary>
+    <ul>
+$repeater(10,<li><a onclick="global.sideNavController.close()" href="{{value}}">{{label}}</a></li>)
+    </ul>
+</details>
+</div>

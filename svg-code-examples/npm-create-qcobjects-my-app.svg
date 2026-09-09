@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://web.resource.org/cc/"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" baseProfile="full"
+    width="320px"
+    height="50px" viewBox="0 0 320 50" preserveAspectRatio="xMidYMid meet" id="svg_document" style="height:100%;"
+    ><!-- Created with macSVG - https://macsvg.org/ -
+    https://github.com/dsward2/macsvg/ -->
+    <title id="svg_document_title">QCObjects snippet.svg</title>
+    <defs id="svg_document_defs"></defs>
+    <path id="path">
+		<animate attributeName="d" from="m166,37 h0" to="m166,37 h1100" dur="6.8s" begin="0s" repeatCount="indefinite"/>
+	</path>
+    <g id="main_group">
+        <rect x="0px" height="50px" id="background_rect" y="-0.25px" width="320px" fill="#0b0d19"
+            rx="7px"></rect>
+        <text
+            id="sample_text_element" style="outline-style:none;transform: translate(-132px, -1px);" xml:space="preserve" x="166.5px"
+            text-rendering="geometricPrecision" font-family="Courier New" y="35.75px" fill="azure"
+            font-size="15px"
+            >
+            <textPath xlink:href="#path">npm create qcobjects my-app</textPath>
+        </text>
+    </g>
+    <circle stroke="#000000" id="circle1" stroke-width="0px" cy="7.5px" fill="maroon" r="3px"
+        cx="9.75px" transform="">
+    </circle>
+    <circle stroke="#000000" cx="18px" id="circle2" stroke-width="0px" cy="7.5px" fill="navajowhite"
+        r="3px"
+        transform=""></circle>
+    <circle stroke="#000000" cx="26px" stroke-width="0px" id="circle3" cy="7.5px" fill="olivedrab"
+        r="3px" transform="">
+    </circle>
+</svg>

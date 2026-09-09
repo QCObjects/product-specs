@@ -1,0 +1,1 @@
+npm init qcobjects my-app

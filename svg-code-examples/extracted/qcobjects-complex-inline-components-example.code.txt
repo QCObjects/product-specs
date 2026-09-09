@@ -1,0 +1,32 @@
+x
+/*
+* QCObjects Complex Inline Component Example
+*/
+Package("org.mycompany.components.productdetail",[
+  Class("ProductDetailComponent",Component,{
+    name: "productdetail",
+    cached: false,
+    tplsource: "inline",
+    shadowed: true,
+    template: `
+    <style>
+    $layout(portrait,./css/components/product-page-portrait.css)
+    $layout(landscape,./css/components/product-page-landscape.css)
+    </style>
+    <section>
+    <article>
+    <div class="product_page">
+      <h4>{{title}}</h4>
+      <div class="product_container">
+        <div class="thumbnail_url">
+          <img src="{{image}}" alt="{{title}}"/>
+        </div>
+        <div class="product_info">
+            {{variants}}
+      </div>
+    </div>
+    </article>
+    </section>
+`
+  })
+]);

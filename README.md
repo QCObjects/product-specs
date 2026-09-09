@@ -37,6 +37,13 @@ template) because code drifts and the spec is the truth.
 | 15 | [Unified Vision v3.0](docs/15-unified-vision-v3.md) | Sovereign Polyglot Ecosystem + transitional phases |
 | 16 | [Add-ons](docs/16-addons.md) | Official handlers, libs, commands, admin packages |
 
+## Examples
+
+Full working snippets extracted from the animated SVG references in
+`svg-code-examples/`, published as [`docs/examples/`](docs/examples/npm-install.md)
+and indexed under **Examples** in the site navigation (18 pages: installs,
+components, services, microservices, splashscreen, templates).
+
 > Specs 01–14 describe the **current** framework. Spec 15 describes **where it is going**
 > and how to plan the transition. When they conflict, 15 governs the direction and
 > the affected 01–14 spec MUST be updated in the same PR.
