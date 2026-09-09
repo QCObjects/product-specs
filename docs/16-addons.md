@@ -67,6 +67,24 @@ without installing any add-on package:
 - The admin panel MUST NEVER ship to production (`npm uninstall` before release
   builds; CI SHOULD fail the build if it is present in `dependencies`).
 
+## Singleton consumption (normative, reference: github-chatapp-test + openai-api)
+
+Beyond tag, widget, and loader instantiation, an add-on MAY export a
+pre-instantiated component singleton the app appends directly:
+
+- The package constructs at module scope (`export const chatbotComponent =
+  new ChatBotComponent({name:"chatbot"})`, shadowed) and exports it alongside
+  imperative helpers (`sendMessage()`, `closeChatbot()`) that attach the
+  controller (`new ChatbotController({component})`) on demand.
+- The app consumes it in boot code (`import chatbotComponents from
+  "qcobjects-openai-api/components"`, then `document.body.append(
+  chatbotComponents.chatbotComponent.body)` on `DOMContentLoaded`) — no
+  `<component>` tag, no registry, no loader round-trip.
+- Rules: singleton components MUST be self-sufficient (own template/handler
+  inline or bundled — never depend on app-side `componentsBasePath`); controller
+  attachment MUST be idempotent (re-calling helpers replaces, never duplicates);
+  apps MUST NOT mutate the singleton's `name` (shared identity across imports).
+
 ## Verification
 
 - Each `stable` row installs cleanly alongside the pinned core/SDK/CLI and its
