@@ -216,6 +216,16 @@ function meta_processor(value){ /* works against the passed param */ }
 Processor.setProcessor(meta_processor);
 ```
 
+Multiple params arrive positionally (spread contract):
+
+```json
+{ "api": "$MAILCHIMP_API(MAILCHIMP_API_KEY,MAILCHIMP_API_SERVER,MAILCHIMP_API_LIST)" }
+```
+```javascript
+function MAILCHIMP_API(keyVar, serverVar, listVar){ /* one param per arg */ }
+Processor.setProcessor(MAILCHIMP_API);
+```
+
 ## Template meta processors `$…(…)` (normative)
 
 Separate from CONFIG processors: `$name(args)` placeholders inside component
