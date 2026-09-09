@@ -119,7 +119,6 @@ major and document migration in the spec + changelog.
   `file_extension()` (first-dot, not last) — keep template basenames single-dot.
 - `CONFIG.md` field list ⊆ this catalogue (this spec is the superset of record).
 - ⚠️ SECURITY: never commit literal secrets in `config.json` (passwords, API
-  keys, tokens) and never paste real configs into chats/logs — reference
-  configs circulating with plaintext Gmail passwords, Printful keys, Stripe
-  keys, and Firebase keys MUST be treated as compromised: rotate every
-  credential, then move all secrets behind `$ENV(...)`.
+  keys, tokens) and never paste real configs into chats/logs — all secrets
+  belong behind `$ENV(...)`, including reference-looking examples, which MUST
+  be rotated before any production use.
