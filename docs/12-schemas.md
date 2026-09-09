@@ -21,6 +21,11 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
    A shipped `config.yaml` is INERT until a YAML loader lands; since the
    template ships both files with identical content, JSON silently governs.
 2. `CONFIG.set('useConfigService',true)` (or equivalent) enables file-backed settings.
+3. Config files are STANDALONE — no overlay/merging mechanism exists. Minimal
+   configs (`{"autodiscover":true}`, `{"documentRoot":"…browser/"}`) are valid;
+   absent keys fall back to built-ins (`documentRoot` → `<cwd>/public`,
+   ports/TLS required only when serving). The schema accordingly requires
+   NOTHING — every key is optional with documented fallbacks.
 
 ## General fields (normative catalogue)
 
@@ -72,6 +77,21 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
     on `/saveplayer`-style routes), and microservice names with no pinned-source
     implementation (`mockup`, `proxy`, `sdk.forbidden` for deny rules like
     `^/node_modules.*$`, `openapi.json|yaml`, `helloworld`, PHP bridges).
+- `backend.interceptors[]` — server-lifecycle plugins, loaded by all three
+  servers at boot: each entry imports its `microservice` package, instantiates
+  `<microservice>.Interceptor` with `{domain, basePath, projectPath,
+  interceptor, server}` (note the live SERVER handle — this is how socket.io
+  and similar layers attach), and pushes the instance to
+  `interceptorInstances`. Entries carry `name`, `description`, `microservice`,
+  `responseHeaders` (proof: video-streaming `Start Streaming` entry).
+- **Unknown keys pass through inert — with one verified exception.** `config.json`
+  MAY carry app-private keys (e.g. top-level `iceServers` for WebRTC STUN);
+  `CONFIG.get` serves any key, but the server acts ONLY on keys it reads.
+  The exception: route-level `supported_methods` IS consumed — by the static
+  microservice (`src/backend/backend-microservice-static.ts`), which allows
+  delivery only when the request method is `"*"`-matched or case-insensitively
+  listed (absent = allowed). Do NOT assume any OTHER unknown key takes effect;
+  verify the read site first.
 - `package{source{backend,frontend}, build, dist}` for packaged builds.
 
 ## Placeholder resolution (normative)

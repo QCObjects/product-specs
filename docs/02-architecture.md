@@ -189,6 +189,21 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
 
+## Realtime signaling coexistence (normative, reference: video-streaming app)
+
+WebSocket/socket.io realtime runs ALONGSIDE the verb dispatch, not through it:
+
+- A microservice method attaches the socket layer to `microservice.server`
+  (production proof: `require("socket.io")(microservice.server)` with
+  `broadcaster`/`watcher`/`offer`/`answer` relay events for WebRTC signaling).
+  Verb stubs on the same class MAY no-op (`done()` immediately) — their job is
+  route presence; media flows peer-to-peer, the server relays signals only.
+- Signaling state MAY use `global` (`global.set("broadcaster", socket.id)`),
+  but MUST be treated as ephemeral (no persistence, no cross-instance
+  assumptions — sticky sessions or external store required past one process).
+- Socket dependencies (`socket.io` npm package) belong to the app/handler
+  package, never to core; the HTTP server MUST NOT depend on socket code paths.
+
 ## Front-end vs back-end services (normative)
 
 - **Front-end service:** a `Service`/`JSONService` subclass consumed in the
@@ -241,6 +256,14 @@ callers never choose a transport. Source as above.
 - `path` is matched as a regex string (e.g. `"^/demo-tests/QCObjects-SDK.js$"`).
 - Unmatched paths fall back to static-file serving from `documentRoot` if the
   file exists — so the server handles static AND dynamic from one table.
+- **Route → class resolution (`ImportMicroservice`, three tiers):** the
+  `microservice` value resolves as (1) npm package (`findPackageNodePath`
+  — bare names like `qcobjects-handler-hello-world` work), else (2)
+  app-local `<absolutePath>/backend/<value>`, else (3) dynamic `import(value)`.
+  The resolved package MUST register `<value>.Microservice`, instantiated with
+  `{domain, basePath, projectPath, route, routeParams, server, stream,
+  request}` (`routeParams` from `{param}` groups; `route` set by the harness —
+  satisfying the constructor requirement in § `BackendMicroservice` base API).
 - Server-side `config.json` MAY carry: `documentRoot`, `basePath`, `projectPath`,
   `domain`, `dataPath`, TLS material (`private-key-pem`, `private-cert-pem`),
   ports. Full field catalogue: [12-schemas](./12-schemas.md).
