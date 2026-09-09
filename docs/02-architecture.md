@@ -241,6 +241,14 @@ callers never choose a transport. Source as above.
 - `path` is matched as a regex string (e.g. `"^/demo-tests/QCObjects-SDK.js$"`).
 - Unmatched paths fall back to static-file serving from `documentRoot` if the
   file exists — so the server handles static AND dynamic from one table.
+- **Route → class resolution (`ImportMicroservice`, three tiers):** the
+  `microservice` value resolves as (1) npm package (`findPackageNodePath`
+  — bare names like `qcobjects-handler-hello-world` work), else (2)
+  app-local `<absolutePath>/backend/<value>`, else (3) dynamic `import(value)`.
+  The resolved package MUST register `<value>.Microservice`, instantiated with
+  `{domain, basePath, projectPath, route, routeParams, server, stream,
+  request}` (`routeParams` from `{param}` groups; `route` set by the harness —
+  satisfying the constructor requirement in § `BackendMicroservice` base API).
 - Server-side `config.json` MAY carry: `documentRoot`, `basePath`, `projectPath`,
   `domain`, `dataPath`, TLS material (`private-key-pem`, `private-cert-pem`),
   ports. Full field catalogue: [12-schemas](./12-schemas.md).

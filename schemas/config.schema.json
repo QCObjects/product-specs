@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "QCObjects config.json",
+  "description": "All keys optional — absent keys fall back to CLI built-in defaults.",
   "type": "object",
-  "required": ["domain", "documentRoot", "relativeImportPath", "serverPortHTTP", "serverPortHTTPS", "backend"],
   "properties": {
     "domain": { "type": "string", "pattern": "^(\\$ENV\\(.+\\)|.+)$" },
     "certificate_provider": { "type": "string" },
