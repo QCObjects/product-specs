@@ -56,6 +56,16 @@ Build/test detail: [14-build-scripts-blueprint](./14-build-scripts-blueprint.md)
 - `Package(name, [classes])` defines and registers; a bare `Package(name)` call
   with no classes throws (retrieval is synchronous `ClassFactory(name)`, which
   throws when the name is missing).
+- **Shortcut aliases (npm interop):** `Package()` RETURNS the registered class
+  array, and accepts any non-empty array — so packages nest:
+  `Package("myfeature", Package("com.mydomain.feature", [MyFeatureClass1,
+  MyFeatureClass2]))` registers both classes under the canonical namespace AND
+  re-registers each under the `myfeature` shortcut. Both
+  `ClassFactory("com.mydomain.feature.MyFeatureClass1")` and
+  `ClassFactory("myfeature.MyFeatureClass1")` resolve (last-wins scope rules
+  apply per name independently). npm packages SHOULD expose one short alias for
+  their canonical namespace this way so consumers `Import` the short name while
+  definitions keep their fully-qualified identity.
 - `Import('dotted.package'[, ready][, external])` loads `<package>.js` from
   `relativeImportPath` (or `remoteImportsPath` when external); `.js` extension
   is mandatory and unchangeable (security).
@@ -167,6 +177,9 @@ a function whose source starts with `class`), pinned at
   freely in one package.
 - New code SHOULD prefer native `class`/`extends` syntax; the `Class()` factory
   remains supported for cross-browser legacy paths and dynamic definitions.
+- `new` vs `New()` is PARITY, not preference: native `new` for standard
+  construction; `New()` when you want its undefined-safety (`New(undefined)` →
+  `new Object()`) and single-arg defaults. Use either consistently per file.
 
 ## CONFIG & processors (normative)
 
@@ -190,6 +203,27 @@ let SERVICE_HOST = function (arg){
   return (new URL(h.processors.ENV(arg))).host;
 };
 Processor.setProcessor(SERVICE_HOST); // enables "$SERVICE_HOST(SERVICE_URL)"
+```
+
+Minimal complete recipe (declare in JSON, define, register — non-arrow so
+`this` is the handler):
+
+```json
+{ "foo": "$meta_processor(value)", "num": 10 }
+```
+```javascript
+function meta_processor(value){ /* works against the passed param */ }
+Processor.setProcessor(meta_processor);
+```
+
+Multiple params arrive positionally (spread contract):
+
+```json
+{ "api": "$MAILCHIMP_API(MAILCHIMP_API_KEY,MAILCHIMP_API_SERVER,MAILCHIMP_API_LIST)" }
+```
+```javascript
+function MAILCHIMP_API(keyVar, serverVar, listVar){ /* one param per arg */ }
+Processor.setProcessor(MAILCHIMP_API);
 ```
 
 ## Template meta processors `$…(…)` (normative)
@@ -261,11 +295,31 @@ builder runs from construction and the route flow).
 `data-*` one-way mock bindings (NOT bidirectional); `controllerClass`;
 `viewClass`; `componentClass`; `effectClass`; `template-source` (passed through
 as-is — `default`|`none`|`inline`|`external`);
-`tplextension` (default `html`).
+`tplextension` (default `html`; free-form — any extension, handler must support
+it; text formats work natively).
 
 ```html
 <component name="main"></component>  <!-- loads ./templates/main[.tplextension] -->
 ```
+
+Minimal complete component (native class + inline template + widget shell):
+
+```javascript
+Package("com.qcobjects", [
+  class Main extends Component {
+    name = "main"
+    tplsource = "inline"
+    template = `hello {{foo}}!`
+    data = { foo: "world" }
+  }
+])
+RegisterWidget("main-widget")
+```
+```html
+<main-widget componentClass="Main"></main-widget>
+```
+`componentClass` takes the bare class name (resolved via `ClassFactory`);
+`data.foo` binds `{{foo}}`; no external template file needed.
 
 **Loaders:** `componentLoader(instance, load_async)` → Promise
 (`successStandardResponse{request, component}` / `failStandardResponse{component}`);
@@ -336,6 +390,11 @@ a `<component>` tag. Source: `src/WidgetsFactory.ts`, pinned at
   `"RegisterWidget is not implemented for non browser ecosystems yet."` outside browsers.
 - New components SHOULD ship a widget name (hyphenated component name) alongside
   the `<component>` form; templates SHOULD demonstrate the widget form.
+- **Layout shell pattern:** page layouts are themselves widgets —
+  `RegisterWidget("layout-basic")` + `<layout-basic shadowed=true></layout-basic>`
+  with the markup in `layout-basic.html` (external default template). The layout
+  owns the page subtree, so give it the root-level `done()` as the stack-ready
+  signal (see § Component authoring rules).
 
 ## Nested components routing (normative)
 
@@ -421,6 +480,13 @@ component, which is the framework's other-framework-interop seam. Sources:
   that need it (e.g. a React-rendered subtree, Mustache/Handlebars templates).
   Handler choice is per-component, so hybrid apps MUST document which components
   use non-default handlers and their syntax.
+- **Canonical example — Markdown docs site (reference: docs website):**
+  `templateHandler = "MarkdownTemplateHandler"` (a plain registered class NAME
+  string, resolved via `ClassFactory`) on `MarkdownComponent` renders `.md`
+  templates; a `generateDoc.js` build step splits `README.md` by heading levels
+  into `templates/components/markdown/<lang>/page_*.md` files AND emits the
+  matching `<routing path="^/<slug>$" name="markdown/…">` entries into a
+  section shell — documentation-as-routed-components, fully generated.
 
 ## Services (normative)
 
@@ -537,9 +603,24 @@ pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/TransitionEf
   `load` for above-fold entrances; custom transitions MUST extend
   `TransitionEffect` (not raw `Effect`) to participate in this protocol.
 - `Timer.thread({duration, timing(fraction,elapsed), intervalInterceptor(progress)})`
-  emulates threads (modern browsers only).
+  emulates threads (modern browsers only). `Timer.alive` is the master
+  kill-switch (static, default `true`; the frame loop checks it) — countdowns
+  and loops MUST observe it, and teardown MUST set `Timer.alive = false`.
+  Canonical controller pattern (reference: puzzle-game `TimerController`):
+  register the controller in `global` (`global.set("timerGameController",…)`),
+  `start()` sets `alive=true` and threads `{duration: component.duration, …}`
+  with per-frame UI writes in `timing` and completion gating in
+  `intervalInterceptor` (`progress==100` → game-over flow → `stop()`);
+  cross-controller coordination goes through `global.get("puzzleController")`.
+  Durations SHOULD come from config (e.g. `puzzleTimeoutSeconds`), never literals.
 - `_Crypt`: `New(_Crypt,{string,key})._encrypt()/._decrypt()`, or static
   `_Crypt.encrypt(text,key)` / `_Crypt.decrypt(cipher,key)`.
+- `shortCode()` (alias `uniqueId`) — one-shot unique token: encrypts two random
+  values under time-based keys and joins the differing chars. Batch idiom
+  (10 tokens, one line — `range` is inclusive so `range(9)` yields 10):
+  `let tokens = range(9).map(() => shortCode())`.
+  Tokens are uniqueness-graded, NOT cryptographic secrets — for sessions/keys
+  use `_Crypt` with explicit passphrases, never `shortCode()` output.
 - `ComplexStorageCache({index, load, alternate})` + `getCached(id)` for
   localStorage object caching.
 - `asyncLoad(fn, args)` runs once after the async queue, before Ready.

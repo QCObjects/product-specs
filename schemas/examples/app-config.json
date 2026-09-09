@@ -41,5 +41,13 @@
         }
       }
     ]
+  },
+  "package": {
+    "source": {
+      "backend": "backend",
+      "frontend": "src"
+    },
+    "build": "build",
+    "dist": "dist"
   }
 }

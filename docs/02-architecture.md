@@ -188,6 +188,28 @@ subclasses through `serviceLoader` and reshape their responses into `body`
   reachable); each upstream failure MUST map to a `body` + `done()` (or a
   deliberate non-200), never an unhandled rejection; aggregation of N
   upstreams SHOULD `Promise.all` them and merge, not chain sequentially.
+- **File-sink microservices:** persistence without a database — `post(data)`
+  appends timestamped JSON under a records dir
+  (`projectPath + "/records/record" + Date.now() + ".json"` via `fs.writeFile`,
+  reference: puzzle-game `saveplayer`). File sinks MUST scope writes to a
+  dedicated records dir (never the document root), MUST derive filenames from
+  timestamp + validated fields (never raw client input — path traversal), and
+  SHOULD answer a JSON-RPC envelope via `done()`.
+
+## Realtime signaling coexistence (normative, reference: video-streaming app)
+
+WebSocket/socket.io realtime runs ALONGSIDE the verb dispatch, not through it:
+
+- A microservice method attaches the socket layer to `microservice.server`
+  (production proof: `require("socket.io")(microservice.server)` with
+  `broadcaster`/`watcher`/`offer`/`answer` relay events for WebRTC signaling).
+  Verb stubs on the same class MAY no-op (`done()` immediately) — their job is
+  route presence; media flows peer-to-peer, the server relays signals only.
+- Signaling state MAY use `global` (`global.set("broadcaster", socket.id)`),
+  but MUST be treated as ephemeral (no persistence, no cross-instance
+  assumptions — sticky sessions or external store required past one process).
+- Socket dependencies (`socket.io` npm package) belong to the app/handler
+  package, never to core; the HTTP server MUST NOT depend on socket code paths.
 
 ## Front-end vs back-end services (normative)
 
@@ -205,6 +227,13 @@ subclasses through `serviceLoader` and reshape their responses into `body`
 - The two meet ONLY at HTTP route boundaries (proxy + BFF patterns above).
   Source: `src/serviceLoader.ts`, pinned at
   `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/serviceLoader.ts`.
+- **Namespace convention (reference: hacktoberfest app):** keep the sides
+  visibly apart — backend microservices under `<org>.backend.*`
+  (`org.quickcorp.backend.projectlist`, `…signup`), browser client services
+  under `<org>.frontend.services` (`ProjectListClientService`,
+  `SignupClientService` hitting `Service.basePath + route`). Same-route pairs
+  SHOULD share the leaf name (`signup` ↔ `signup`) so routes, services, and
+  templates trace to each other by inspection.
 
 ## `serviceLoader` dispatch detail (normative)
 
@@ -241,6 +270,14 @@ callers never choose a transport. Source as above.
 - `path` is matched as a regex string (e.g. `"^/demo-tests/QCObjects-SDK.js$"`).
 - Unmatched paths fall back to static-file serving from `documentRoot` if the
   file exists — so the server handles static AND dynamic from one table.
+- **Route → class resolution (`ImportMicroservice`, three tiers):** the
+  `microservice` value resolves as (1) npm package (`findPackageNodePath`
+  — bare names like `qcobjects-handler-hello-world` work), else (2)
+  app-local `<absolutePath>/backend/<value>`, else (3) dynamic `import(value)`.
+  The resolved package MUST register `<value>.Microservice`, instantiated with
+  `{domain, basePath, projectPath, route, routeParams, server, stream,
+  request}` (`routeParams` from `{param}` groups; `route` set by the harness —
+  satisfying the constructor requirement in § `BackendMicroservice` base API).
 - Server-side `config.json` MAY carry: `documentRoot`, `basePath`, `projectPath`,
   `domain`, `dataPath`, TLS material (`private-key-pem`, `private-cert-pem`),
   ports. Full field catalogue: [12-schemas](./12-schemas.md).

@@ -1,0 +1,32 @@
+# Template content (v2.3)
+
+Source animation: `svg-code-examples/qcobjects-template-content-example.svg`.
+
+> Also sourced from qcobjects-template-content-example (1).svg (identical).
+
+```html
+<!-- QCObjects v2.3 Template content example-->
+<style>
+  /*
+  * Main Layout Styles
+  */
+  $layout(portrait,./layout-portrait.css)
+  $layout(landscape,./layout-landscape.css)
+</style>
+<header>
+  <component name="header" controllerClass="HeaderController"></component>
+</header>
+<aside>
+  <component name="appbar" shadowed=true></component>
+</aside>
+<main role="main">
+  <section>
+    <component name="contentblock">
+        <routing path="#page-{id}" name="page"></routing>
+      </component>
+  </section>
+</main>
+<footer>
+  <component name="footer"></component>
+</footer>
+```

@@ -1,0 +1,2 @@
+<!-- QCObjects menu-option component template example -->
+<a href="{{value}}" class="topmenu {{active}}">{{label}}</a>

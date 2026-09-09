@@ -54,9 +54,12 @@ keyword autoload contract ([05-cli](./05-cli.md) § Handlers/plugins/commands au
   not gated on empty `backend.routes`) at every boot:
   `^/QCObjects.js$` → core `src/QCObjects.js`,
   `^/js/packages/QCObjects-SDK.js$` → SDK `src/QCObjects-SDK.js`,
-  `^/qcobjects-sdk/(.*)$` → SDK tree — all CORS `*`. These are route RECORDS
-  naming the static microservice; no `BackendMicroservice` subclass is defined
-  in this repo. Use them for framework-asset serving instead of custom code.
+  `^/qcobjects-sdk/(.*)$` → SDK tree — all CORS `*`. The named microservice IS
+  defined in this repo (`src/backend/backend-microservice-static.ts`): a
+  `BackendMicroservice` subclass serving `redirect_to` targets over HTTP/2
+  (`respondWithFD`) or legacy HTTP, with per-route `supported_methods` gating
+  (`"*"` or case-insensitive list; absent = allowed). Use these routes for
+  framework-asset serving instead of custom code.
 
 - **Core libraries** (always present as peer dependencies):
   `qcobjects` (core framework) and `qcobjects-sdk` (controllers, views,

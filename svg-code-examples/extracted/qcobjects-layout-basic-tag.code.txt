@@ -1,0 +1,7 @@
+x
+<layout-basic cached=true 
+              controllerClass=LayoutController>
+</layout-basic>
+<script>
+  RegisterWidget("layout-basic")
+</script>

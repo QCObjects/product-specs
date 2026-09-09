@@ -100,7 +100,17 @@ The SDK MUST export, at minimum (CJS + ESM + browser + types):
   (`<layout-basic splashscreen name="main" cached=true ...>` in widget syntax).
 - **SplashScreenComponent** — base splash (extended by video + cube variants).
 - **CubeSplashScreenComponent** — 3D spinning-cube splash (shadowed, inline
-  template with `spin` keyframes).
+  template with `spin` keyframes). Attributes: `duration` (example `"3000"`),
+  `data-background` (any CSS background — gradients work,
+  `linear-gradient(…)`), `data-cube_image` (face texture URL, bound to
+  `--background-3d-cube-image`):
+  ```html
+  <splash-screen componentClass="CubeSplashScreenComponent"
+      duration="3000"
+      data-background="linear-gradient(90deg, rgba(2,0,36,1) 0%, …)"
+      data-cube_image="./img/Q_web-white.png">
+  </splash-screen>
+  ```
 - **NotificationComponent** — notification shell. Drift note: registered under
   the legacy `org.quickcorp.components.notifications` package (the i18n loader
   also references an `org.quickcorp.*` namespace); rename to `org.qcobjects.*`
@@ -153,6 +163,20 @@ Calling form matters — static-only vs instance-only is per class:
   degrees 0–360), `Radius`, `Resize` (1 = normal), `WipeLeft/Right/Up/Down`.
 - Batch via `Tag(...).map(el => X.apply(el, …))` for static classes,
   `Tag(...).map(el => (new X()).apply(el, …))` for instance classes.
+- **Effects-dispatch pattern (reference: effects demo app):** expose an
+  `effects: {apply<Name>(el){…}}` map on the controller plus an
+  `applyEffect(name)` dispatcher (`this.effects["apply"+name](el)`); generate
+  trigger buttons with a custom meta processor emitting BOTH `ontouchstart`
+  and `onclick` handlers (touch-first devices); register the controller in
+  `global` (`global.set("mainControllerInstance", this)` in `done()`) so
+  generated markup can reach it. Composed moves (slide/fall/rise) chain static
+  `Move.apply` calls with measured offsets (`clientWidth`/`clientHeight`);
+  rotates SHOULD set `transformOrigin` first.
+- **`tplextension` is free-form:** any extension value works
+  (`<name>.<tplextension>`) — the TEMPLATE HANDLER class must support it.
+  Text formats are natively supported (`svg`, `md`, `txt` — reference: clickable
+  octocat via `tplextension="svg"`); non-text formats REQUIRE a custom handler
+  that parses them (see [03-core-framework](./03-core-framework.md) § Template handlers).
 
 Modal presets (`org.qcobjects.modal.effects` — a REGISTERED package,
 importable via `ClassFactory("org.qcobjects.modal.effects.ModalFade")`;

@@ -159,6 +159,10 @@ seed CSV/JSON pairs (only `Dockerfile`, `docker-compose.yml`, `src/_redirects` o
   `config.json` routes, never in the entry file.
 - **Quality gates:** `lighthouse` script with budgets SHOULD run against the
   local TLS server before release; `spec/` + `coverage/` MUST stay green.
+- **OAuth redirect target:** OAuth-style flows land on a minimal static page
+  (`auth_redirect.html`: shell + CSP + `<noscript>`, no app boot) that captures
+  the provider response (reference: academy app). Keep it dependency-free —
+  it MUST NOT import the framework (loads before auth exists).
 
 ## Electron desktop shell (reference: `qcobjects-electron` line)
 

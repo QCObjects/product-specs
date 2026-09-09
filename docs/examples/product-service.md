@@ -1,0 +1,34 @@
+# Product service
+
+Source animation: `svg-code-examples/qcobjects-product-service-example.svg`.
+
+```javascript
+  Class("ProductsService", Service,{
+    name: "products",
+    external: false,
+    cached: true,
+    method: "GET",
+    headers:{
+      "Content-Type": "application/json"
+    },
+    url: "/products",
+    withCredentials: false,
+    _new_: ()=>{
+      // service instantiated, some initial settings like credentials can be here
+    done({request, service}){
+      logger.debug(request);
+      service.template = JSON.stringify({
+          result: JSON.parse(service.template).result.reverse().map(function (product){
+          return {
+            id: product.id,
+            title: product.name,
+            link: `#product-detail-${product.id}`,
+            image: product.thumbnail_url,
+            label: "Buy this awesome: ",
+            category: product.name
+          };
+        })
+      });
+    }
+  })
+```
