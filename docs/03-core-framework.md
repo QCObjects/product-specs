@@ -350,6 +350,11 @@ a `<component>` tag. Source: `src/WidgetsFactory.ts`, pinned at
   `"RegisterWidget is not implemented for non browser ecosystems yet."` outside browsers.
 - New components SHOULD ship a widget name (hyphenated component name) alongside
   the `<component>` form; templates SHOULD demonstrate the widget form.
+- **Layout shell pattern:** page layouts are themselves widgets —
+  `RegisterWidget("layout-basic")` + `<layout-basic shadowed=true></layout-basic>`
+  with the markup in `layout-basic.html` (external default template). The layout
+  owns the page subtree, so give it the root-level `done()` as the stack-ready
+  signal (see § Component authoring rules).
 
 ## Nested components routing (normative)
 
