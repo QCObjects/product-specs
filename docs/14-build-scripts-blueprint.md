@@ -102,9 +102,9 @@ Apps SHOULD delegate TypeScript work to the CLI instead of raw one-liners:
   (e.g. `minify:css`, parcel targets).
 - ⚠️ `build:esbuild`/`build:esb` are NOT app-ready: the command assumes
   CLI-local paths (`src/types` alias, `src/templates` copy) absent from apps,
-  and its catch handler crashes on `logger.error` (nonexistent), masking the
+  and its catch   handler crashes on `logger.error` (nonexistent), masking the
   real failure. Withheld from the template pending
-  [qcobjects-cli#18](https://github.com/QCObjects/qcobjects-cli/issues/18);
+  `QCObjects/qcobjects-cli#18` (private repo — members only);
   do NOT add the passthroughs until that issue closes.
 
 ## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
