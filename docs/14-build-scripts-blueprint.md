@@ -88,6 +88,23 @@ App template deltas (`qcobjects-new-app`): `test` = eslint + jasmine;
 (`npm test && npx tsc`); parcel `targets.default.distDir =
 public` — `public/` MUST NOT be committed. (No `publish:local` script exists.)
 
+## App build delegation (normative — v2.5.0-ts template and later)
+
+Apps SHOULD delegate TypeScript/esbuild work to the CLI instead of raw
+one-liners — the CLI commands are the canonical builders:
+
+- `build:ts` → `npm test && qcobjects build:typescript tsconfig.json`
+  (`build:typescript <configFile>` resolves the config from the app CWD).
+- `build:ts-types` → `qcobjects build:typescript tsconfig.d.json`.
+- `build:esbuild` → `qcobjects build:esbuild`, `build:esb` → `qcobjects build:esb`.
+- Keep raw `tsc`/`esbuild` one-liners ONLY where the CLI cannot reach
+  (e.g. `minify:css`, parcel targets).
+- Caveat: `qcobjects build:esbuild` takes NO arguments — it assumes the standard
+  layout (`src/**/*.ts` → `public/{cjs,esm,browser}` + `src/templates` copy).
+  Non-standard layouts MUST vendor adapted script copies instead of fighting
+  the fixed convention (a future `--src/--out` parameterization is tracked
+  separately).
+
 ## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
 
 Framework repos ship no JSX transform (`tsconfig` has no `jsx` option; zero
