@@ -88,6 +88,25 @@ App template deltas (`qcobjects-new-app`): `test` = eslint + jasmine;
 (`npm test && npx tsc`); parcel `targets.default.distDir =
 public` — `public/` MUST NOT be committed. (No `publish:local` script exists.)
 
+## App build delegation (normative — v2.5.0-ts template and later)
+
+## App build delegation (normative — v2.5.0-ts template and later)
+
+Apps SHOULD delegate TypeScript work to the CLI instead of raw one-liners:
+
+- `build:ts` → `npm test && qcobjects build:typescript tsconfig.json`
+  (`build:typescript <configFile>` resolves the config from the app CWD —
+  proven green end-to-end in sandbox, incl. lint + jasmine).
+- `build:ts-types` → `qcobjects build:typescript tsconfig.d.json` (proven green).
+- Keep raw `tsc`/`esbuild` one-liners where the CLI cannot reach
+  (e.g. `minify:css`, parcel targets).
+- ⚠️ `build:esbuild`/`build:esb` are NOT app-ready: the command assumes
+  CLI-local paths (`src/types` alias, `src/templates` copy) absent from apps,
+  and its catch   handler crashes on `logger.error` (nonexistent), masking the
+  real failure. Withheld from the template pending
+  `QCObjects/qcobjects-cli#18` (private repo — members only);
+  do NOT add the passthroughs until that issue closes.
+
 ## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
 
 Framework repos ship no JSX transform (`tsconfig` has no `jsx` option; zero
