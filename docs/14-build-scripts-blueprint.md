@@ -90,20 +90,22 @@ public` — `public/` MUST NOT be committed. (No `publish:local` script exists.)
 
 ## App build delegation (normative — v2.5.0-ts template and later)
 
-Apps SHOULD delegate TypeScript/esbuild work to the CLI instead of raw
-one-liners — the CLI commands are the canonical builders:
+## App build delegation (normative — v2.5.0-ts template and later)
+
+Apps SHOULD delegate TypeScript work to the CLI instead of raw one-liners:
 
 - `build:ts` → `npm test && qcobjects build:typescript tsconfig.json`
-  (`build:typescript <configFile>` resolves the config from the app CWD).
-- `build:ts-types` → `qcobjects build:typescript tsconfig.d.json`.
-- `build:esbuild` → `qcobjects build:esbuild`, `build:esb` → `qcobjects build:esb`.
-- Keep raw `tsc`/`esbuild` one-liners ONLY where the CLI cannot reach
+  (`build:typescript <configFile>` resolves the config from the app CWD —
+  proven green end-to-end in sandbox, incl. lint + jasmine).
+- `build:ts-types` → `qcobjects build:typescript tsconfig.d.json` (proven green).
+- Keep raw `tsc`/`esbuild` one-liners where the CLI cannot reach
   (e.g. `minify:css`, parcel targets).
-- Caveat: `qcobjects build:esbuild` takes NO arguments — it assumes the standard
-  layout (`src/**/*.ts` → `public/{cjs,esm,browser}` + `src/templates` copy).
-  Non-standard layouts MUST vendor adapted script copies instead of fighting
-  the fixed convention (a future `--src/--out` parameterization is tracked
-  separately).
+- ⚠️ `build:esbuild`/`build:esb` are NOT app-ready: the command assumes
+  CLI-local paths (`src/types` alias, `src/templates` copy) absent from apps,
+  and its catch handler crashes on `logger.error` (nonexistent), masking the
+  real failure. Withheld from the template pending
+  [qcobjects-cli#18](https://github.com/QCObjects/qcobjects-cli/issues/18);
+  do NOT add the passthroughs until that issue closes.
 
 ## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
 
