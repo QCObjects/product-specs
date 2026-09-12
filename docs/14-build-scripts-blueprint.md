@@ -107,6 +107,46 @@ Apps SHOULD delegate TypeScript work to the CLI instead of raw one-liners:
   `QCObjects/qcobjects-cli#18` (private repo — members only);
   do NOT add the passthroughs until that issue closes.
 
+## Template browser-bundle gate (normative — proven in the v2.5.6-ts release)
+
+The template's served bundle MUST be built with the canonical `publish:esbuild`
+command (template `package.json`, pinned at
+`QCObjects/qcobjects-new-app/blob/v2.5.6-ts/package.json`): esbuild `--bundle
+--format=iife --global-name=global` over `build/js/**/*.js`, with
+`--external:node:*` plus the 20 bare node builtins, plus `--external:types`.
+Acceptance, read from the emitted `public/js/init.js`: ZERO eager top-level
+`node:`/`types` imports (node builtins stay lazy inside `__require`
+factories; the `types` re-export is erased); the iife `var global=...`
+wrapper present.
+
+Three release-gate invariants (each burned at least one failed publish before
+it was pinned — template tags `v2.5.2-ts`…`v2.5.5-ts` stand as tombstones):
+
+- **No inherited tsconfig `paths` wildcards.** The template extends
+  `qcobjects/tsconfig.json` (pinned at
+  `QCObjects/qcobjects/blob/v2.5.142/tsconfig.json`), which ships
+  `"baseUrl":"."` + `"paths":{"*":["src/*"]}`. Bundlers honor tsconfig
+  `paths`, so bare `require("qcobjects")` is redirected to
+  `node_modules/qcobjects/src/qcobjects` (lowercase) while the shipped file
+  is `QCObjects.ts` — hard `Cannot read file` on case-sensitive runners,
+  silently passing on case-insensitive dev mounts. The template MUST
+  override `baseUrl` + `paths` in its own `tsconfig.json`, keeping only the
+  case-correct `types` mapping
+  (`./node_modules/qcobjects/src/types/global/index.d.ts`). Local builds can
+  NEVER catch this class — CI (ext4) is the only honest gate.
+- **`repository.url` MUST match the true org.** Sigstore provenance (OIDC
+  trusted publishing) hard-rejects (`E422`) when `package.json`
+  `repository.url` names any other org — including kept history
+  (`QuickCorp`) — instead of the publishing org (`QCObjects`). The URL MUST
+  equal `https://github.com/QCObjects/qcobjects-new-app` byte-for-byte
+  post-normalization.
+- **Prerelease versions MUST publish with an explicit `--tag`.** Modern npm
+  refuses bare `npm publish` for hyphen-suffixed versions (`You must specify
+  a tag using --tag when publishing a prerelease version`). The `npmpublish`
+  workflow (pinned at
+  `QCObjects/qcobjects-new-app/blob/v2.5.6-ts/.github/workflows/npmpublish.yml`)
+  maps `-beta`→`beta`, `-lts`→`lts`, else `--tag latest`.
+
 ## App-level JSX pattern (normative, reference: `qcobjects-web-2025`)
 
 Framework repos ship no JSX transform (`tsconfig` has no `jsx` option; zero
