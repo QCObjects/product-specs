@@ -134,6 +134,40 @@ shaped so resolution cannot fork. This is the **version chain**.
 - This spec does **not** propose merging packages (monorepo/single-package
   rejected above) and does **not** propose a new build package.
 
+## Global-scope dependency (normative finding, carry-forward)
+
+The framework's single-instance global context relies on a **writable,
+redefinable `global` property on the ambient object** (`window` | `global` |
+`self` | `top` | `globalThis`). This is a **non-portable assumption**:
+
+- **ECMAScript** does not specify the ambient globals `window`/`global`/`self`;
+  only `globalThis` (ES2020 § 18.6.1) is defined.
+- **Node** exposes `globalThis.global` as a writable *data* property.
+- **Browsers** expose `window.global` as a **read-only accessor** whose
+  `configurable`/redefinability is *host-defined and context-dependent* — not
+  guaranteed by any standard.
+
+The concrete failure sequence observed (2026-09-13):
+
+1. `set("global", window)` (i.e. `_top.global = window`) threw
+   `TypeError: Cannot set property global ... only a getter` under the strict-mode
+   esbuild bundle.
+2. Replacing it with `Object.defineProperty(_top, "global", {
+   writable:true, configurable:true, enumerable:true, value })` **passed** in a
+   Chrome DevTools console but **failed** (`TypeError: Cannot redefine property:
+   global`) in the same Chrome when run inside the built app — because the
+   property's redefinability is not stable across the two evaluation contexts.
+
+**Conclusion:** any mechanism that *writes or redefines* the ambient `global`
+property is ECAM-non-compliant-by-omission and environment-volatile, and MUST
+NOT be relied upon. The durable direction is to **remove the framework's global
+scope dependency** — carry the unified context as an explicit module export /
+owned object rather than a synthesized property on the ambient global — and
+treat `window`/`global`/`self` as read-only detection sources only.
+
+This is NOT resolved; it is a carry-forward blocker tracked alongside the open
+design questions below.
+
 ## Open design questions (to resolve before codifying)
 
 These MUST be answered before this proposal becomes binding; until then the
@@ -151,6 +185,12 @@ chain is a **proposal**, not a ratified contract:
 3. **Rollout:** which consumers (templates, add-ons, enterprise) migrate first,
    and what is the compatibility window during which range-based consumers still
    resolve?
+4. **Global-scope removal:** the single-instance `global` currently lives on the
+   ambient object and requires a writable/redefinable `global` property — which
+   is non-portable (see "Global-scope dependency" above). The fix direction is
+   to remove the global-scope dependency (explicit module export / owned object),
+   but the migration path for cross-frame consumers (`top`/`parent` reach) and
+   legacy in-browser global access is not yet designed.
 
 ## Verification (normative, once ratified)
 
@@ -164,3 +204,6 @@ chain is a **proposal**, not a ratified contract:
 - [ ] `--legacy-peer-deps` is **not** required for a clean install of the
       pinned chain (it MAY remain tolerated as an option, but correctness no
       longer depends on it).
+- [ ] The `global` context is no longer a synthesized property on the ambient
+      object: `global` resolves identically across Node, browser DevTools, and
+      the built strict-mode bundle (no `Cannot set/redefine property: global`).
