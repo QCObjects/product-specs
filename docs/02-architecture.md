@@ -16,6 +16,14 @@ Component-level detail lives in 03–05.
 
 ## The five layers (normative, read bottom-up)
 
+> **Consolidation note (transitional):** Layers 1–3 are being consolidated into
+> a single `qcobjects` npm package (one `QCObjects` repo, one `src/` tree), per
+> [17-consolidated-core](./17-consolidated-core.md) and
+> [ADR-0001](./adr/0001-consolidated-core.md). Until the cut-over to
+> `2.6.5-unified` completes, the three packages below still publish
+> independently; afterwards they resolve to one package and the layer labels
+> become internal *concerns* of `qcobjects`, not separate installs.
+
 1. **Core (`qcobjects` npm package)** — class system (`Class`, `InheritClass`,
    `ClassFactory`, `New`), MVC primitives (`Component`, `Controller`, `View`,
    `VO`, `DDO`), packaging (`Package`, `Import`/`Export`), routing
@@ -32,6 +40,7 @@ Component-level detail lives in 03–05.
    `config.json` (e.g. `com.qcobjects.backend.microservice.static`), plus
    language bridges (PHP handler today; Wasm / FastAPI per v3.2+).
    MUST be independently installable npm packages, auto-discovered by keyword.
+   (Add-ons are NOT part of the core consolidation — they stay decoupled.)
 5. **Apps (`qcobjects-new-app` and derivatives)** — PWA shell (`index.html`,
    `manifest.json`, `sw.js`), `src/js/{config,init,packages}`, static assets.
    Apps consume layers 1–3; MUST NOT fork them.

@@ -39,10 +39,15 @@ Goal: remove legal and pipeline friction for enterprise adoption.
   `$ENV()` / `$config()` injection standardized across core, SDK, CLI, and
   every handler.
 - **Rollout order (binding):**
-  1. `qcobjects-cli` re-architecture first (developer entry point).
-  2. Core (`qcobjects`) + `qcobjects-sdk` refactor + MIT.
-  3. Cascade: `qcobjects-commands`, plugins, handlers, web components,
+  1. **Consolidate the framework** — merge core (`qcobjects`), `qcobjects-sdk`,
+     and `qcobjects-cli` into one `QCObjects` repo publishing a single
+     `qcobjects@2.6.5-unified` package, per
+     [17-consolidated-core](./17-consolidated-core.md) and
+     [ADR-0001](./adr/0001-consolidated-core.md). This replaces the earlier
+     plan of treating the CLI and core/SDK as separately re-architected packages.
+  2. Cascade: `qcobjects-commands`, plugins, handlers, web components,
      `create-qcobjects` templates, `eslint-config-qcobjects` (+ TypeScript twin).
+     (Add-on packages remain decoupled and keyword-discovered.)
 - **P1 exit criteria:** every repo MIT-licensed with header-lint green;
   single-branch pipeline live with tag-channel publish proven (`latest` + one
   `-beta`); templates re-verified (install + serve + build) on the v3.0 line;
@@ -88,8 +93,13 @@ through Runtime Bridges (all npm-installed, keyword-discovered, per spec 02).
 
 ## Architectural invariants (all phases, normative)
 
-- Decoupled handlers and adapters: independent npm packages, no hard
-  dependencies, keyword-based auto-discovery.
+- Decoupled handlers and adapters **for add-on packages** (handlers, libs,
+  commands, admin): independent npm packages, no hard dependencies,
+  keyword-based auto-discovery.
+- The three framework packages (core, `qcobjects-sdk`, `qcobjects-cli`) are
+  **consolidated into one `qcobjects` package** on the path to v3.0, per
+  [17-consolidated-core](./17-consolidated-core.md). Package-decoupling is
+  *encouraged* for add-ons; it is *not* mandated for the framework packages.
 - `config.json` remains the source of truth for runtime behavior,
   credentials, and routing.
 - Best tool per domain: JS/TS for web, Rust/Wasm for speed, Python for data
