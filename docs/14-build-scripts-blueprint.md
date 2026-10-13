@@ -171,14 +171,125 @@ Framework repos ship no JSX transform (`tsconfig` has no `jsx` option; zero
   template hosts a React root). Either direction MUST own exactly one renderer
   per DOM subtree — never let both frameworks reconcile the same nodes.
 
+## Core `npm run build` trace (normative, observed v2.7.5)
+
+Purpose: record the *observed* internal expansion of the core build so future
+maintainers do not have to re-derive it, and bind the behaviours that are easy
+to break by accident.
+
+Scope: `npm run build` in `QCObjects`. Verified 2026-10-13 at
+[`v2.7.5`](https://github.com/QCObjects/QCObjects/releases/tag/v2.7.5) from a
+clean tree (no `public/types`, no `build/`, no `tsconfig.d.tsbuildinfo`).
+Wall time 55s, `exit=0`, 22 npm script invocations.
+
+```text
+npm run build
+├─ build:ts-types   npx tsc --project tsconfig.d.json
+│    → public/types/index.d.ts          39,511 B   (79 `declare module` blocks)
+│    → public/types/index.d.ts.map      30,395 B
+│    → public/types/tsconfig.tsbuildinfo 38,393 B  (composite)
+├─ build:ts         npm run coverage && npx tsc
+│  ├─ coverage      nyc --reporter=lcov --reporter=text-summary npm run test
+│  │  ├─ lint       npx eslint src/**/*.ts --fix
+│  │  └─ test:jasmine  npm run test:ts-types && npx ts-node … jasmine.js
+│  │     ├─ test:ts-types  npx tsc --project tsconfig.jasmine.json
+│  │     │     → build/spec/ stays EMPTY (no declaration / emitDeclarationOnly)
+│  │     └─ 21 specs, 0 failures
+│  └─ npx tsc       → build/*.js  (78 files; tsconfig.json has no `declaration`)
+├─ build:browser    npm run build:esbuild → node ./build-esbuild.js
+│    → public/cjs/index.cjs        229,499 B
+│    → public/esm/index.mjs        226,458 B
+│    → public/browser/QCObjects.js 241,189 B
+└─ postbuild        node ./postbuild.js
+     → strips `export {};`, writes `declare module "qcobjects"` into index.d.ts
+```
+
+### Invariants
+
+- **`public/types/index.d.ts` MUST have exactly one writer.** `build:ts-types`
+  is it. `build:ts` and `test:ts-types` write to `build/` and `build/spec`
+  respectively and MUST NOT be assumed to touch it — verified by md5
+  comparison across each step, all byte-identical.
+- **The bundle is post-processed, not emitted ready-to-use.** `postbuild` is the
+  only transformer, and npm fires it only for `npm run build`. A release MUST
+  run `npm run build`, never an inner step (`node build-esbuild.js` alone skips
+  both `build:ts-types` and `postbuild`).
+- **`postbuild` MUST stay idempotent.** `tsconfig.d.json` is `composite`, so a
+  rebuild with no source changes skips emit and leaves the previous output in
+  place; a non-idempotent transform stacks one copy of its output per build.
+  Confirmed: three consecutive runs produced three duplicate blocks before this
+  was fixed.
+- **`test:ts-types` is a type-check gate, not a build step.** It compiles the
+  specs and emits nothing (`tsconfig.jasmine.json` sets `outDir: build/spec`
+  with neither `declaration` nor `emitDeclarationOnly`). Do not read its empty
+  `build/spec/` as a failure.
+
+### Environment (normative)
+
+- **`DEVMODE` and `DOMAIN` MUST be treated as inert in the core build.** Neither
+  string occurs anywhere in the core repo outside `node_modules`; `DEVMODE` is
+  consumed by `qcobjects-cli` (`src/defaultsettings.ts`), and `DOMAIN` is not
+  read by core at all. They are CLI/template conventions. Running
+  `DEVMODE=debug DOMAIN=localhost npm run build` in core produces byte-identical
+  output to an unprefixed build.
+
+### Side effects (normative)
+
+- **`lint` MUST NOT be assumed read-only.** `eslint src/**/*.ts --fix` rewrites
+  sources in place, so `npm run build` can modify tracked files via its
+  `coverage → test → lint` path. Currently a no-op on a clean tree (0 files
+  changed), but a release MUST check `git status -- src` after building.
+- **`build/` churn is expected, not a real change.** `build/*.js` shows as
+  modified after every build because the local TypeScript emits static fields as
+  static blocks (`static _keyStr = "…"` → `static { this._keyStr = "…" }`).
+  This is a compiler/target difference. A release MUST NOT commit `build/` churn
+  alongside a source change without confirming the diff is only that transform.
+- **Coverage is reported but never enforced.** `nyc` has no thresholds
+  configured, so coverage can never fail a build. Observed at v2.7.5:
+  statements 34.44% (1248/3623), branches 15.10% (237/1569), functions 14.73%
+  (127/862), lines 31.63% (1087/3436). The suite gates construction paths well;
+  low-coverage paths (template cache, widget tag lifecycle) are covered only by
+  the browser harness and MUST be verified that way.
+
+### `npm version` is the release mechanism (normative)
+
+Releases MUST go through `npm version`, not a hand-edited bump.
+
+- `preversion` (`npm cache verify && npm run coverage`) is the release gate.
+  Note `build:ts` also invokes `coverage`, so `npm run build` transitively runs
+  lint + the suite.
+- `npm version` MUST be relied upon to update **both** `package.json` and
+  `package-lock.json`. A hand-edited bump desyncs them: observed on `main` at
+  core `2.7.5` vs lock `2.7.3`, and template `2.5.14-ts` vs `2.5.13-ts`. Note
+  `package-lock.json` is not included in the published tarball, so this drift
+  does not reach npm consumers — but it still breaks `npm ci` reproducibility.
+- To keep a branch/PR-based flow, use `npm version <x> --no-git-tag-version
+  --ignore-scripts`, then commit, open the PR, and tag after merge. Verified
+  this syncs both files and leaves no tag behind.
+
 ## `postversion` rule (normative)
 
 - Default: `"postversion": "git push && git push --tags"`.
 - Tag-triggered-publish repos (core, CLI): `"postversion": "git push"` —
   `syncGit` pushes the tag once afterwards (see [05-cli](./05-cli.md)).
+- **Observed deviation (2026-10-13):** core ships
+  `"postversion": "git push && git push --tags"`, not the mandated `"git push"`.
+  The CLI matches. The `qcobjectsnewapp` template also uses the default despite
+  being tag-triggered-publish. Either the repos MUST be corrected or this rule
+  MUST be relaxed; do not leave the two contradicting each other.
 
 ## Verification
 
 - Clean `npm ci && npm test && npm run build` passes in core, SDK, and CLI.
 - `ls public/cjs public/esm public/browser public/types` all non-empty post-build.
 - `prepare` is a silent no-op in tarball installs (no `.git`).
+- Core build trace invariants hold: after a clean-tree `npm run build`,
+  `public/types/index.d.ts` has exactly one `declare module "qcobjects"` and zero
+  top-level `export` statements, and is byte-identical across repeated runs.
+- `package.json` and `package-lock.json` report the same `version` on every
+  release branch.
+- `git status -- src` is empty after a build (`lint --fix` did not rewrite
+  sources).
+- A consumer probe importing `CONFIG`, `Component`, `RegisterWidgets` and
+  `ComplexStorageCache` from `qcobjects` type-checks with **0** errors under
+  `skipLibCheck: true`.
