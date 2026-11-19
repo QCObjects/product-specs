@@ -109,6 +109,12 @@ working entrypoint is the `qcobjects-shell` BINARY),
 
 ## Environment & deploy (normative)
 
+Full resolution chain and defaults contract: [18-environment-variables](./18-environment-variables.md).
+
+How secrets and API settings are wired (proxy pattern, env lookup, choice of
+where the browser hands the key to your backend):
+[19-secrets-and-api-settings](./19-secrets-and-api-settings.md).
+
 `.env` (never committed) SHOULD be accompanied by a committed `.env.example`
 defining:
 `ENGINE_NAME` (e.g. `sqlite3`), `DATABASE_NAME` (e.g. `admin.db`),

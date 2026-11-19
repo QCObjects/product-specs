@@ -56,6 +56,12 @@ template workflow builds between install and test. Both include an
 
 ## Version-tag interplay (normative)
 
+> **Cross-repo coordination (forward-looking):** the framework-idempotency
+> problem and the coordinated-release "version chain" proposal are documented in
+> [17-version-chain](./17-version-chain.md). Until that spec is ratified, each
+> repo continues to release independently as described below; the chain is a
+> proposal, not yet binding.
+
 - Tags are cut by the CLI itself (`v-patch --git --npm`); the pushed tag is what
   CI publishes — so a bad tag publishes a bad release. `v-sync` reconciles
   `VERSION` from `git describe` after release merges.
