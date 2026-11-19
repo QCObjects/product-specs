@@ -48,6 +48,7 @@ nav:
   - Add-ons: 16-addons.md
   - Version Chain: 17-version-chain.md
   - Environment Variables: 18-environment-variables.md
+  - Secrets and API Settings: 19-secrets-and-api-settings.md
   - Examples:
     - Install Packages: examples/npm-install.md
     - Scaffold an App: examples/npx-create-app.md

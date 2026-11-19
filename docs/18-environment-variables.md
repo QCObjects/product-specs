@@ -155,6 +155,9 @@ is asked for and never participate in the `$ENV(…)` expansion.
 
 ## Related docs
 
+- [19-secrets-and-api-settings](./19-secrets-and-api-settings.md) — the secrets chains that sit on top of this resolver.
+
+
 - [03-core-framework](./03-core-framework.md) — the processor mechanics.
 - [05-cli](./05-cli.md) — CLI runtime context and startup.
 - [06-app-structure](./06-app-structure.md) — app file layout and env contract.

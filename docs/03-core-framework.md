@@ -640,3 +640,6 @@ pinned at `https://github.com/QCObjects/QCObjects/blob/v2.5.142/src/TransitionEf
 - `node -e "require('qcobjects')"` and `import 'qcobjects'` both resolve.
 - `npx tsc --noEmit -p tsconfig.d.json` passes; jasmine suite passes.
 - Every symbol above resolves at the pinned tag; drift opens a spec-update PR.
+
+
+Secrets and API settings live behind the same chain — see [19-secrets-and-api-settings](./19-secrets-and-api-settings.md).
