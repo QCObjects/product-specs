@@ -49,11 +49,13 @@ Short version:
    process, not on the value written at build time. A plain string in a
    template like `"port": 8080` is indistinguishable from a resolved one.
 3. **Component templates** — templates (e.g., `.tpl.html`) are processed by the
-   `Component` runtime via `Processor.process(str, component)` at parse time.
-   Any string containing `$ENV(NAME)` will be substituted.
-4. **Stylesheets and inline scripts** — `SourceCSS` / `SourceJS` pipelines also
-   run `Processor.process`, so `$ENV(…)` in `<style>` and `<script>` resolves
-   the same way.
+   `Component` runtime via `Processor.process(str, component)` at parse time
+   (`DefaultTemplateHandler.assign` runs `Processor.processObject` on the
+   whole template string). Because substitution is done by global regex, any
+   string containing `$ENV(NAME)` will be substituted — including inside
+   `<style>` and `<script>` blocks. `SourceCSS`/`SourceJS` themselves
+   do not run the substitution for external files; the template-level pass
+   does it before the CSS/JS is attached.
 
 ## The `ENV` processor itself
 
