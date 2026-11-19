@@ -132,8 +132,9 @@ aliases (`qco`, `qcobjects`, `qcobjects-cli`, `qcobjects-server`,
   `documentRoot`, `backend.routes`, TLS via `$config(domain)`-derived filenames.
 - `process.env.PORT` overrides the listen port ONLY on the legacy HTTP and GAE
   servers; the default HTTP/2 `start()` ignores `PORT`.
-- local `config.json` at CLI root is gitignored dev-only (default devmode
-  `$ENV(DEVMODE,info)` → `info`); `$ENV(VAR)` templates resolve in `defaultsettings.ts`.
+- local `config.json` at CLI root is gitignored dev-only; its `devmode`
+  gates `logger.debugEnabled`. Expansion of `$ENV(…)` placeholders is processor-applied:
+  see [18-environment-variables](./18-environment-variables.md) for the full chain.
 - Production recommendation: HTTP/2 server on Ubuntu 18.x+ with NodeJS 12.x+.
 
 ## Commands & internals (normative)

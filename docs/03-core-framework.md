@@ -183,6 +183,11 @@ a function whose source starts with `class`), pinned at
 
 ## CONFIG & processors (normative)
 
+Expansion of `$ENV(…)`, `$config(…)`, and `$<name>(…)` placeholders, including
+how comma-separated defaults work in the CLI and where the resolution happens,
+is documented end-to-end in
+[18-environment-variables](./18-environment-variables.md).
+
 - `CONFIG.set(key, value)` / `CONFIG.get(key)`; `useConfigService=true` loads
   `config.json` from the app basePath via `ConfigService`
   (`ConfigService.configFileName='config.json'` by default).
