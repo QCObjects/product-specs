@@ -112,8 +112,6 @@ is asked for and never participate in the `$ENV(…)` expansion.
 - Ship a `.env.example` listing every `$ENV(VAR,default)` referenced. A
   reviewer can then confirm the defaults are safe (e.g., `info` for
   `devmode`, `localhost` for `domain`).
-- `serverPortHTTP` / `serverPortHTTPS` are NOT env-overridable via
-  `$ENV(KEY)` unless you put `$ENV(…)` into those keys in `config.json` yourself — the CLI overrides them from the environment directly (`PORT` etc.), independent of `config.json`.
 - App templates have no `.env`, no `.envrc`, no shell wrapper — environment is
   supplied by the operator or CI.
 
@@ -122,9 +120,12 @@ is asked for and never participate in the `$ENV(…)` expansion.
 - **`config.json` file discovery.** The CLI looks for `config.json` at
   `CONFIG.get("projectPath")/config.json`. `projectPath` is set from
   `process.cwd()` at startup, not via `$ENV(…)`.
-- **Ports / listen addresses.** The server binds `serverPortHTTP` /
-  `serverPortHTTPS` directly into socket configuration — it does NOT re-run
-  `Processor.process` on those numbers inside the HTTP stack.
+- **Ports / listen addresses.** `server.listen(process.env.PORT || CONFIG.get("serverPortHTTP"))`:
+  if `PORT` is set in the process env, it wins regardless of `config.json`.
+  Putting `"serverPortHTTPS": "$ENV(PORT, 8080)"` in `config.json` also works —
+  `CONFIG.get("serverPortHTTPS")` expands through the processor chain at read
+  time. The config.json default is the numeric string `"8080"` / `"8443"` — no
+  `$ENV(…)` shape, passes through unchanged.
 - **Shell expansion.** `DEVMODE=debug` in your shell sets `process.env.DEVMODE`
   in the Node process it launches; it does not globally export into the HTTP
   stack's `serverPort*` sockets beyond the startup moment.
