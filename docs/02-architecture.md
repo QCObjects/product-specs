@@ -270,6 +270,12 @@ callers never choose a transport. Source as above.
 - `path` is matched as a regex string (e.g. `"^/demo-tests/QCObjects-SDK.js$"`).
 - Unmatched paths fall back to static-file serving from `documentRoot` if the
   file exists — so the server handles static AND dynamic from one table.
+- **HTTP/2 pathname/scriptname semantics (normative):** the server MUST parse `:path`
+  into `pathname` and `scriptname` using the v2.3/v2.4 algorithm: always trim the
+  last path segment for `pathname` (`pathname = path.substr(0,lastIndexOf("/"))`)
+  and derive `scriptname` from the final segment or `documentRootFileIndex` when
+  the path contains no dot. This prevents `undefined/undefined` concatenations in
+  `FileDispatcher` and preserves static-first dispatch precedence.
 - **Route → class resolution (`ImportMicroservice`, three tiers):** the
   `microservice` value resolves as (1) npm package (`findPackageNodePath`
   — bare names like `qcobjects-handler-hello-world` work), else (2)
