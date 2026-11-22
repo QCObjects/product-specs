@@ -42,7 +42,9 @@ Machine schema: `schemas/config.schema.json`; fixtures: `schemas/examples/*.json
   (default `index.html`), `cacheControl` (e.g. `max-age=31536000`).
 - `relativeImportPath` (e.g. `js/packages/`), `componentsBasePath`.
 - `serverPortHTTP` / `serverPortHTTPS` (e.g. `'8080'` / `'8443'`;
-  `process.env.PORT` overrides ONLY on legacy/GAE servers — the default HTTP/2
+  See [18-environment-variables](./18-environment-variables.md) for the full resolution chain, comma-default syntax, runtime vs. build-time, and deferred reads.
+
+`process.env.PORT` overrides ONLY on legacy/GAE servers — the default HTTP/2
   `start()` ignores it).
 - `useLocalSDK` (local vs `sdk.qcobjects.dev`), `useLegacyHTTP`,
   `enableShellCommands` (CLI default `true`; templates SHOULD set `false`
@@ -142,3 +144,6 @@ major and document migration in the spec + changelog.
   keys, tokens) and never paste real configs into chats/logs — all secrets
   belong behind `$ENV(...)`, including reference-looking examples, which MUST
   be rotated before any production use.
+
+- [19-secrets-and-api-settings](./19-secrets-and-api-settings.md) — how secrets and API settings are wired; secret values always flow through `$ENV(…)`
+  or stay in personal/session storage.
